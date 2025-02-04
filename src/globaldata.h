@@ -1,7 +1,7 @@
 #ifndef __GLOBALDATA__
 #define __GLOBALDATA__
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 #define NUMBER_OF_SETPOINTS 3
 
@@ -33,11 +33,11 @@ typedef struct {
     // PID parameters
     double Kp;
     double Ki;
-    double Kd
+    double Kd;
 } PersistentData_t;
 
 typedef struct {
-    VolatileData_t volatile;
+    VolatileData_t   actual;
     PersistentData_t persistent;
 } GlobalData_t;
 
