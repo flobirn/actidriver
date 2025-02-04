@@ -1,7 +1,7 @@
 #ifndef __GLOBALDATA__
 #define __GLOBALDATA__
 
-#include <Arduino.h>
+#include "Arduino.h"
 
 #define NUMBER_OF_SETPOINTS 3
 
