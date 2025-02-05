@@ -1,0 +1,1 @@
+copy this folder to .platformio\packages\framework-arduino-avr\variants
