@@ -1,0 +1,22 @@
+#ifndef __SOLARIZED_H__
+#define __SOLARIZED_H__
+
+//solarized palette in RGB565
+#define SOLARIZED_BASE03  0x0146
+#define SOLARIZED_BASE02  0x01a8
+#define SOLARIZED_BASE01  0x5b6e
+#define SOLARIZED_BASE00  0x63d0
+#define SOLARIZED_BASE0   0x84b2
+#define SOLARIZED_BASE1   0x9514
+#define SOLARIZED_BASE2   0xef5a
+#define SOLARIZED_BASE3   0xffbc
+#define SOLARIZED_YELLOW  0xb440
+#define SOLARIZED_ORANGE  0xca42
+#define SOLARIZED_RED     0xd985
+#define SOLARIZED_MAGENTA 0xd1b0
+#define SOLARIZED_VIOLET  0x6b98
+#define SOLARIZED_BLUE    0x245a
+#define SOLARIZED_CYAN    0x2d13
+#define SOLARIZED_GREEN   0x84c0
+
+#endif

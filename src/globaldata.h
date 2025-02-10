@@ -6,7 +6,7 @@
 #define NUMBER_OF_SETPOINTS 3
 
 typedef struct {
-    uint8_t heaterActive:1;
+    uint8_t heaterActive:1; //* heater state
     uint8_t dummy:7;
 } FlagFields_t;
 
