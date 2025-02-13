@@ -42,4 +42,6 @@ typedef struct {
 } GlobalData_t;
 
 
+extern GlobalData_t globals;
+
 #endif

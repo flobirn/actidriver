@@ -1,5 +1,5 @@
 #include "globaldata.h"
 
-GlobalData_t globals = {
+GlobalData_t globals = { 0
     
 };
