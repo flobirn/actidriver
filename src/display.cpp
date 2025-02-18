@@ -17,8 +17,10 @@ void display_setup() {
     display.setTextSize(1);
 #endif
 #ifdef LIB_UCGLIB
-    display.begin(UCG_FONT_MODE_TRANSPARENT);
+    display.begin(UCG_FONT_MODE_SOLID);
     display.clearScreen();
+    display.setColor(0, SOLARIZED_24b_base3 );
+    display.drawBox(0, 0, 132, 160);
 #endif
 }
 

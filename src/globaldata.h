@@ -15,11 +15,20 @@ typedef union {
     FlagFields_t flags;
 } FlagRegister_t;
 
+typedef enum {
+    HT_NONE = 0,
+    HT_FMRP, //* my handle
+    HT_WMRP,
+    HT_WMRT
+} HandleType_t;
+
 typedef struct {
     uint16_t tipTemperature;
     uint8_t  handleTemperature;
 
-    uint16_t pwmWidth; // value for the timer counter compare regiter
+    uint16_t     pwmWidth; // value for the timer counter compare regiter
+    
+    HandleType_t handleType;
 
     FlagFields_t flagsRegister;
 } VolatileData_t;
