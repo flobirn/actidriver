@@ -140,6 +140,8 @@ State_t* fsm_handleEvent(Event_t event) {
             if (activeState->on_click != NULL)
                 activeState = (State_t*) activeState->on_click();
             break;
+        default:
+            activeState = &initialState;
     }
 
     return activeState;

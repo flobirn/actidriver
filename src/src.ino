@@ -39,19 +39,27 @@ void loop() {
         case 'c':
           fsm_handleEvent(EVT_CLICK);
           break;
+        case 'h':
+          if (globals.actual.handleTemperature == HT_FMRP) 
+            globals.actual.handleType = HT_NONE;
+          else 
+            globals.actual.handleType = HT_FMRP;
+          break;
       }
 
     }
     if (globals.actual.tipTemperature < 100) dir = 1;
     if (globals.actual.tipTemperature > 500) dir = -1;
     globals.actual.tipTemperature += dir;
-    if (counter % 5 == 1) globals.actual.handleType = HT_NONE;
+    //if (counter % 5 == 1) globals.actual.handleType = HT_NONE;
     if (counter % 5 == 3) globals.actual.handleType = HT_FMRP;
-
+    unsigned long start = micros();
     mainmenu_display();
+    unsigned long end = micros();
+    Serial.println(end - start);
 
     counter++;
-    delay(1000);
+    //delay(1000);
   }
     
 }
