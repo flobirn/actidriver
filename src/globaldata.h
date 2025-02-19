@@ -31,6 +31,10 @@ typedef struct {
     HandleType_t handleType;
 
     FlagFields_t flagsRegister;
+
+    // data needed by fsm and menus
+    uint16_t fsmTargetTemperature;
+    
 } VolatileData_t;
 
 typedef struct {

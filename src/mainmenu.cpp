@@ -1,6 +1,7 @@
 #include "globaldata.h"
 #include "display.h"
 #include "solarized.h"
+#include "fsm.h"
 //#include "logisoso09_64pt7b.h"
 
 typedef struct {
@@ -42,22 +43,36 @@ static inline void displayTipTemperature() {
 
 #define  TARGET_TEMPERATURE_LENGTH 3
 #define  TARGET_TEMPERATURE_X 48
-#define  TARGET_TEMPERATURE_Y 100
+#define  TARGET_TEMPERATURE_Y 106
 #define  TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base3
 #define  TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_blue
+#define  SELECTED_TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base01
+#define  SELECTED_TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_yellow
+#define  HIGHLIGHTED_TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base01
+#define  HIGHLIGHTED_TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_orange
 #define  TARGET_TEMPERATURE_FONT ucg_font_logisoso22_hr
 #define  TARGET_TEMPERATURE_FONT_SIZE 2
 
 static inline void displayTargetTemperature() {
+    extern State_t selectSetPoint;
+    uint16_t whatToShow = globals.persistent.targetTemperature;
     display.setFont(TARGET_TEMPERATURE_FONT);
     display.setPrintPos(TARGET_TEMPERATURE_X, TARGET_TEMPERATURE_Y);
-
-    display.setColor(FG_COLOR_IDX, TARGET_TEMPERATURE_FG_COLOR);
-    display.setColor(BG_COLOR_IDX, TARGET_TEMPERATURE_BG_COLOR);
-    if (globals.persistent.targetTemperature != shownValues.targetTemperature) {
-        display.print(globals.persistent.targetTemperature);
-        shownValues.targetTemperature = globals.persistent.targetTemperature;
+    if (selectSetPoint.flags.selected) {
+        display.setColor(FG_COLOR_IDX, SELECTED_TARGET_TEMPERATURE_FG_COLOR);
+        display.setColor(BG_COLOR_IDX, SELECTED_TARGET_TEMPERATURE_BG_COLOR);
+        whatToShow = globals.actual.fsmTargetTemperature;
+    } else if (selectSetPoint.flags.highlighted) {
+        display.setColor(FG_COLOR_IDX, HIGHLIGHTED_TARGET_TEMPERATURE_FG_COLOR);
+        display.setColor(BG_COLOR_IDX, HIGHLIGHTED_TARGET_TEMPERATURE_BG_COLOR);
+    } else {
+        display.setColor(FG_COLOR_IDX, TARGET_TEMPERATURE_FG_COLOR);
+        display.setColor(BG_COLOR_IDX, TARGET_TEMPERATURE_BG_COLOR);
     }
+    //if (whatToShow != shownValues.targetTemperature) {
+        display.print(whatToShow);
+        shownValues.targetTemperature = whatToShow;
+    //}
 
 }
 
