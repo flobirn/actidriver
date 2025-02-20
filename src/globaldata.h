@@ -6,8 +6,11 @@
 #define NUMBER_OF_SETPOINTS 3
 
 typedef struct {
-    uint8_t heaterActive:1; //* heater state
-    uint8_t dummy:7;
+    uint8_t heaterActive:1;           //* heater state
+    uint8_t heaterStandby:1;          //* heater in stand by mode
+    uint8_t heaterTempSensorError:1;  //* temperature sensor for heater could not be read
+    
+    uint8_t dummy:5;
 } FlagFields_t;
 
 typedef union {

@@ -30,37 +30,81 @@ DisplayedValues_t shownValues = {0};
 #define  TIP_TEMPERATURE_BG_COLOR SOLARIZED_24b_base3
 #define  TIP_TEMPERATURE_FG_COLOR SOLARIZED_24b_blue
 #define  TIP_TEMPERATURE_FONT ucg_font_inb53_mn
-#define  TIP_TEMPERATURE_FONT_SIZE 1
+
+#define  TIP_TEMPERATURE_ERROR_BG_COLOR SOLARIZED_24b_red
+#define  TIP_TEMPERATURE_ERROR_FG_COLOR SOLARIZED_24b_base00
+#define  TIP_TEMPERATURE_ERROR_FONT ucg_font_helvB12_hr
+#define  TIP_TEMPERATURE_ERROR_MASK 0x8000u
+#define  TIP_TEMPERATURE_ERROR_X 20
+#define  TIP_TEMPERATURE_ERROR_Y 32
+
+#define  TIP_TEMPERATURE_STANDBY_BG_COLOR SOLARIZED_24b_base03
+#define  TIP_TEMPERATURE_STANDBY_FG_COLOR SOLARIZED_24b_cyan
+#define  TIP_TEMPERATURE_STANDBY_FONT ucg_font_helvB12_hr
+#define  TIP_TEMPERATURE_STANDBY_MASK 0x4000u
+#define  TIP_TEMPERATURE_STANDBY_X 20
+#define  TIP_TEMPERATURE_STANDBY_Y 32
+
 
 static inline void displayTipTemperature() {
-    display.setFont(TIP_TEMPERATURE_FONT);
-    display.setPrintPos(TIP_TEMPERATURE_X, TIP_TEMPERATURE_Y);
-    uint8_t tempNew = globals.actual.tipTemperature / 100; //hundreds number
-    uint8_t tempOld = shownValues.tipTemperature / 100; //hundreds number
+    //do we have to display error state?
+    uint16_t temp;
+    if (globals.actual.flagsRegister.heaterTempSensorError) {
+        if ((shownValues.tipTemperature & TIP_TEMPERATURE_ERROR_MASK) != TIP_TEMPERATURE_ERROR_MASK) {
+            display.setFont(TIP_TEMPERATURE_ERROR_FONT);
+            display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_ERROR_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_ERROR_BG_COLOR);
+            display.setPrintPos(TIP_TEMPERATURE_ERROR_X, TIP_TEMPERATURE_ERROR_Y);
+            // ignore everything else, just display error
+            display.println("------");
+            display.println("!!! ERROR TIP TEMP !!!");
+            shownValues.tipTemperature = TIP_TEMPERATURE_ERROR_MASK;
+        }
+    } else if (globals.actual.flagsRegister.heaterStandby) {
+        // stand by mode, display temperature and "standby"
+        if ((shownValues.tipTemperature & TIP_TEMPERATURE_STANDBY_MASK) != (globals.actual.tipTemperature & TIP_TEMPERATURE_STANDBY_MASK)) {
+            display.setFont(TIP_TEMPERATURE_STANDBY_FONT);
+            display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_STANDBY_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_STANDBY_BG_COLOR);
+            display.setPrintPos(TIP_TEMPERATURE_STANDBY_X, TIP_TEMPERATURE_STANDBY_Y);
 
-    display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
-    display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
-    if (tempNew != tempOld) {
-        display.print(tempNew);
+            // display standby and tip temperature
+            if (shownValues.tipTemperature < TIP_TEMPERATURE_STANDBY_MASK)
+                display.println("STANDBY");
+
+            if ((shownValues.tipTemperature & ~TIP_TEMPERATURE_STANDBY_MASK) != globals.actual.tipTemperature)
+                display.println(globals.actual.tipTemperature);
+
+            shownValues.tipTemperature = globals.actual.tipTemperature | TIP_TEMPERATURE_STANDBY_MASK;
+        }
+    } else {
+        //normal display
+        display.setFont(TIP_TEMPERATURE_FONT);
+        display.setPrintPos(TIP_TEMPERATURE_X, TIP_TEMPERATURE_Y);
+        uint8_t tempNew = globals.actual.tipTemperature / 100; //hundreds number
+        uint8_t tempOld = shownValues.tipTemperature / 100; //hundreds number
+    
+        display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
+        display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
+        if (tempNew != tempOld) {
+            display.print(tempNew);
+        }
+        // tens
+        tempNew = (globals.actual.tipTemperature % 100) / 10;
+        tempOld = (shownValues.tipTemperature % 100) / 10;
+        if (tempNew != tempOld) {
+            display.setPrintPos(TIP_TEMPERATURE_X + TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
+            display.print(tempNew);
+        }
+        //units
+        tempNew = globals.actual.tipTemperature % 10;
+        tempOld = shownValues.tipTemperature % 10;
+        if (tempNew != tempOld) {
+            display.setPrintPos(TIP_TEMPERATURE_X + 2 * TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
+            display.print(tempNew);
+        }
+        shownValues.tipTemperature = globals.actual.tipTemperature;
     }
-    // tens
-    tempNew = (globals.actual.tipTemperature % 100) / 10;
-    tempOld = (shownValues.tipTemperature % 100) / 10;
-    if (tempNew != tempOld) {
-        display.setPrintPos(TIP_TEMPERATURE_X + TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
-        display.print(tempNew);
-    }
-    //units
-    tempNew = globals.actual.tipTemperature % 10;
-    tempOld = shownValues.tipTemperature % 10;
-    if (tempNew != tempOld) {
-        display.setPrintPos(TIP_TEMPERATURE_X + 2 * TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
-        display.print(tempNew);
-    }
-
-
-    shownValues.tipTemperature = globals.actual.tipTemperature;
-
 }
 
 
