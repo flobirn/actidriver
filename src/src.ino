@@ -53,10 +53,10 @@ void loop() {
     globals.actual.tipTemperature += dir;
     //if (counter % 5 == 1) globals.actual.handleType = HT_NONE;
     if (counter % 5 == 3) globals.actual.handleType = HT_FMRP;
-    unsigned long start = micros();
+    //unsigned long start = micros();
     mainmenu_display();
-    unsigned long end = micros();
-    Serial.println(end - start);
+    //unsigned long end = micros();
+    //Serial.println(end - start);
 
     counter++;
     //delay(1000);

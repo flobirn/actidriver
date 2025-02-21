@@ -33,6 +33,14 @@ DisplayedValues_t shownValues = {0};
 #define  TIP_TEMPERATURE_FONT_SIZE 1
 
 static inline void displayTipTemperature() {
+    /** todo: show when tip is not present or error or no hanlde like "///"
+    * or like two lines, first one "///" second one an error code/message
+    * possible error messages: no handle, handle temp error, tip temp error
+    */
+   /** todo: show heater in standby, two lines, one saying "standby", the other the current temp
+    * 
+   */
+    
     display.setFont(TIP_TEMPERATURE_FONT);
     display.setPrintPos(TIP_TEMPERATURE_X, TIP_TEMPERATURE_Y);
     uint8_t tempNew = globals.actual.tipTemperature / 100; //hundreds number
@@ -96,7 +104,7 @@ static inline void displayTargetTemperature() {
         display.setColor(BG_COLOR_IDX, TARGET_TEMPERATURE_BG_COLOR);
     }
     if (whatToShow != shownValues.targetTemperature) {
-        display.print(whatToShow & (TARGET_TEMPERATURE_SELECTED_MASK -1) & (TARGET_TEMPERATURE_HIGHLIGHTED_MASK -1));
+        display.print(whatToShow & (~TARGET_TEMPERATURE_SELECTED_MASK) & (~TARGET_TEMPERATURE_HIGHLIGHTED_MASK));
         shownValues.targetTemperature = whatToShow;
     }
 
@@ -158,6 +166,8 @@ static inline void displayMenuBar() {
 #define  SETPOINT_BG_COLOR SOLARIZED_24b_base3
 #define  SETPOINT_FG_COLOR SOLARIZED_24b_blue
 #define  SETPOINT_WIDTH 40
+#define  SETPOINT_SELECTED_MASK 0x8000u
+#define  SETPOINT_HIGHLIGHTED_MASK 0x4000u
 #define  HIGHLIGHTED_SETPOINT_BG_COLOR SOLARIZED_24b_base02
 #define  HIGHLIGHTED_SETPOINT_FG_COLOR SOLARIZED_24b_yellow
 
@@ -176,7 +186,7 @@ static inline void displaySetpoints() {
     uint16_t temp = globals.persistent.setpoints[0];
     display.setPrintPos(SETPOINT_X, SETPOINT_Y);
     if (lowestSetPoint.flags.highlighted) {
-        temp = temp | 0x4000;
+        temp = temp | SETPOINT_HIGHLIGHTED_MASK;
         display.setColor(FG_COLOR_IDX, HIGHLIGHTED_SETPOINT_FG_COLOR);
         display.setColor(BG_COLOR_IDX, HIGHLIGHTED_SETPOINT_BG_COLOR);
     } else {
@@ -192,7 +202,7 @@ static inline void displaySetpoints() {
     temp = globals.persistent.setpoints[1];
     display.setPrintPos(SETPOINT_X + SETPOINT_WIDTH, SETPOINT_Y);
     if (middleSetPoint.flags.highlighted) {
-        temp = temp | 0x4000;
+        temp = temp | SETPOINT_SELECTED_MASK;
         display.setColor(FG_COLOR_IDX, HIGHLIGHTED_SETPOINT_FG_COLOR);
         display.setColor(BG_COLOR_IDX, HIGHLIGHTED_SETPOINT_BG_COLOR);
     } else {
@@ -208,7 +218,7 @@ static inline void displaySetpoints() {
     temp = globals.persistent.setpoints[1];
     display.setPrintPos(SETPOINT_X + 2 * SETPOINT_WIDTH, SETPOINT_Y);
     if (highestSetPoint.flags.highlighted) {
-        temp = temp | 0x4000;
+        temp = temp | SETPOINT_SELECTED_MASK;
         display.setColor(FG_COLOR_IDX, HIGHLIGHTED_SETPOINT_FG_COLOR);
         display.setColor(BG_COLOR_IDX, HIGHLIGHTED_SETPOINT_BG_COLOR);
     } else {
