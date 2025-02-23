@@ -9,8 +9,9 @@ typedef struct {
     uint8_t heaterActive:1;           //* heater state
     uint8_t heaterStandby:1;          //* heater in stand by mode
     uint8_t heaterTempSensorError:1;  //* temperature sensor for heater could not be read
+    uint8_t buttonState:1;
     
-    uint8_t dummy:5;
+    uint8_t reserve:4;
 } FlagFields_t;
 
 typedef union {
@@ -37,6 +38,10 @@ typedef struct {
 
     // data needed by fsm and menus
     uint16_t fsmTargetTemperature;
+
+    //rotary encoder
+    int8_t counterNew;
+    int8_t counterOld;
     
 } VolatileData_t;
 

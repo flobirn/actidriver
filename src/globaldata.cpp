@@ -1,7 +1,7 @@
 #include "globaldata.h"
 
 GlobalData_t globals = {
-    .actual = {0},
+    .actual = { 0 },
     .persistent = {
         .targetTemperature = 320,
         .setpoints = {250, 300, 350},

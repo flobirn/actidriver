@@ -16,15 +16,15 @@ typedef struct {
 } StateFlags_t;
 
 typedef struct {
-    void* (*on_up) ();
-    void* (*on_down) ();
-    void* (*on_click) ();
+    void (*on_up) ();
+    void (*on_down) ();
+    void (*on_click) ();
 
     StateFlags_t flags;
 
 } State_t;
 
-State_t* fsm_init();
-State_t* fsm_handleEvent(Event_t event);
+void fsm_init();
+void fsm_handleEvent(Event_t event);
 
 #endif
