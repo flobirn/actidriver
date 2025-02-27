@@ -77,9 +77,10 @@ static inline void displayTipTemperature() {
                 display.print("STANDBY");
             }
 
-            if ((shownValues.tipTemperature & ~TIP_TEMPERATURE_STANDBY_MASK) != globals.actual.tipTemperature)
+            if ((shownValues.tipTemperature & ~TIP_TEMPERATURE_STANDBY_MASK) != globals.actual.tipTemperature) {
                 display.setPrintPos(TIP_TEMPERATURE_STANDBY_X, TIP_TEMPERATURE_STANDBY_Y+TIP_TEMPERATURE_STANDBY_HEIGHT);
                 display.print(globals.actual.tipTemperature);
+            }
 
             shownValues.tipTemperature = globals.actual.tipTemperature | TIP_TEMPERATURE_STANDBY_MASK;
         }
