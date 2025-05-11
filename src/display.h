@@ -14,7 +14,7 @@ typedef struct {
 } RGB_t;
 
 #define TFT_CS        10
-#define TFT_RST        9 // Or set to -1 and connect to Arduino RESET pin
+#define TFT_RST       -1 // Or set to -1 and connect to Arduino RESET pin
 #define TFT_DC         8
 
 #define FG_COLOR_IDX 0
