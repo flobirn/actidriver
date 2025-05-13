@@ -282,7 +282,7 @@ static inline void displaySetpoints() {
             display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
         }
         if (temp != shownValues.setPoints[point]) {
-            display.print(globals.setpoints[0]);
+            display.print(globals.setpoints[point]);
             shownValues.setPoints[point] = temp;
         }
     }

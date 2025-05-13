@@ -9,11 +9,11 @@ extern GlobalData_t globals;
 
 void button_down_isr() {
   if (digitalRead(BUTTON_B_PIN)) {
-    globals.counterNew++;
-    //fsm_handleEvent(EVT_DOWN);
-  } else {
+    //rotated left
     globals.counterNew--;
-    //fsm_handleEvent(EVT_UP);
+  } else {
+    //rotated right
+    globals.counterNew++;
   }
 }
 
@@ -55,10 +55,10 @@ void loop() {
       serialIn = Serial.read();
       switch (serialIn) {
         case 'u':
-          fsm_handleEvent(EVT_UP);
+          fsm_handleEvent(EVT_RIGHT);
           break;
         case 'd':
-          fsm_handleEvent(EVT_DOWN);
+          fsm_handleEvent(EVT_LEFT);
           break;
         case 'c':
           fsm_handleEvent(EVT_CLICK);
@@ -85,13 +85,20 @@ void loop() {
 
     // detect rotary encoder event
     if(globals.counterNew > 0)
-      fsm_handleEvent(EVT_UP);
+      fsm_handleEvent(EVT_RIGHT);
     if(globals.counterNew < 0)
-      fsm_handleEvent(EVT_DOWN);
+      fsm_handleEvent(EVT_LEFT);
 
     noInterrupts();
     globals.counterNew = 0;
     interrupts();
+
+    // read rotarry encoder switch
+    if ((!digitalRead(BUTTON_SW_PIN)) && //button pressed?
+        (globals.buttonState))
+          fsm_handleEvent(EVT_CLICK);
+
+    globals.buttonState = digitalRead(BUTTON_SW_PIN);
 
     if (globals.handleActuals[0].tipTemperature < 100) dir = 1;
     if (globals.handleActuals[0].tipTemperature > 500) dir = -1;
@@ -103,12 +110,7 @@ void loop() {
     //unsigned long end = micros();
     //Serial.println(end - start);
     
-    // read rotarry encoder switch
-    if ((!digitalRead(BUTTON_SW_PIN)) && //button pressed?
-        (globals.buttonState))
-          fsm_handleEvent(EVT_CLICK);
 
-    globals.buttonState = digitalRead(BUTTON_SW_PIN);
 
     counter++;
     delay(1000);

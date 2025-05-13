@@ -5,8 +5,8 @@
 
 typedef enum {
     EVT_NONE,
-    EVT_UP,
-    EVT_DOWN,
+    EVT_RIGHT,
+    EVT_LEFT,
     EVT_CLICK
 } Event_t;
 
@@ -23,11 +23,13 @@ typedef struct {
 
 class State {
     public:
-    virtual State* onUp() {return this;};
-    virtual State* onDown() {return this;};
+    virtual State* onRight() {return this;};
+    virtual State* onLeft() {return this;};
     virtual State* onClick() {return this;};
     StateFlags_t flags;
     State* switchTo (State* next) {
+        Serial.print("switch to ");
+        Serial.println((uint16_t)next);
         flags.highlighted = false;
         next->flags.highlighted = true;
         return next;
@@ -38,22 +40,22 @@ class State {
 };
 
 class InitialState : public State {
-    public: State* onUp();
+    public: virtual State* onRight();
 };
 
 class SelectSetPointState : public State {
     public:
-    State* onUp();
-    State* onDown();
-    State* onClick();
+    virtual State* onRight();
+    virtual State* onLeft();
+    virtual State* onClick();
     uint8_t handle;
 };
 
 class SetPointState : public State { 
     public:
-    State* onUp();
-    State* onDown();
-    State* onClick();
+    virtual State* onRight();
+    virtual State* onLeft();
+    virtual State* onClick();
     uint8_t setPoint;
     uint8_t handle;
 };
