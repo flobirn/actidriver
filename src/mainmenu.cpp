@@ -6,183 +6,231 @@
 
 typedef struct {
     uint16_t tipTemperature;
-    uint8_t handleTemperature;
+    uint8_t  handleTemperature;
     uint16_t targetTemperature;
 
     HandleType_t handleType;
 
+} HandleDisplayedValues_t;
+
+typedef struct {
+    HandleDisplayedValues_t handle[MAX_HANDLES];
     uint16_t lowestSetpoint;
     uint16_t middleSetpoint;
     uint16_t highestSetpoint;
-} DisplayedValues_t;
+} DisplayedData_t;
 
-DisplayedValues_t shownValues = {0};
+
+DisplayedData_t shownValues = {
+    .handle = {{0}, {0}}, 
+    .lowestSetpoint = 0,
+    .middleSetpoint = 0,
+    .highestSetpoint = 0,
+};
 
 /* main menu configuration */
+
+#define SCREEN_HEIGHT 128
+#define SCREEN_WIDTH  160
+#define SCREEN_COL_WIDTH (SCREEN_WIDTH / MAX_HANDLES)
 
 #define  ERROR_BG_COLOR SOLARIZED_24b_base3
 #define  ERROR_FG_COLOR SOLARIZED_24b_red
 
 #define  TIP_TEMPERATURE_LENGTH 3
+//#define  TIP_TEMPERATURE_FONT ucg_font_inb53_mn
+//#define  TIP_TEMPERATURE_FONT ucg_font_logisoso38_tn
+#define  TIP_TEMPERATURE_FONT ucg_font_inb33_mn
 #define  TIP_TEMPERATURE_X 0
-#define  TIP_TEMPERATURE_Y 64
-#define  TIP_TEMPERATURE_CHAR_WIDTH 40
+#define  TIP_TEMPERATURE_CHAR_WIDTH 25
+#define  TIP_TEMPERATURE_CHAR_HEIGHT 43
+#define  TIP_TEMPERATURE_STRING_WIDTH (TIP_TEMPERATURE_LENGTH * TIP_TEMPERATURE_CHAR_WIDTH)
+#define  TIP_TEMPERATURE_X2 (TIP_TEMPERATURE_X + (SCREEN_WIDTH / 2))
+#define  TIP_TEMPERATURE_Y TIP_TEMPERATURE_CHAR_HEIGHT
 #define  TIP_TEMPERATURE_BG_COLOR SOLARIZED_24b_base3
 #define  TIP_TEMPERATURE_FG_COLOR SOLARIZED_24b_blue
-#define  TIP_TEMPERATURE_FONT ucg_font_inb53_mn
 
 #define  TIP_TEMPERATURE_ERROR_BG_COLOR SOLARIZED_24b_red
 #define  TIP_TEMPERATURE_ERROR_FG_COLOR SOLARIZED_24b_base3
-#define  TIP_TEMPERATURE_ERROR_FONT ucg_font_helvB12_hr
+#define  TIP_TEMPERATURE_ERROR_FONT ucg_font_helvB12_hf
+#define  TIP_TEMPERATURE_ERROR_LENGTH 5
+#define  TIP_TEMPERATURE_ERROR_CHAR_WIDTH 14
+#define  TIP_TEMPERATURE_ERROR_CHAR_HEIGHT 17
+#define  TIP_TEMPERATURE_ERROR_STRING_WIDTH (TIP_TEMPERATURE_ERROR_LENGTH * TIP_TEMPERATURE_ERROR_CHAR_WIDTH)
 #define  TIP_TEMPERATURE_ERROR_MASK 0x8000u
-#define  TIP_TEMPERATURE_ERROR_X 20
-#define  TIP_TEMPERATURE_ERROR_Y 32
+#define  TIP_TEMPERATURE_ERROR_X 0
+#define  TIP_TEMPERATURE_ERROR_Y TIP_TEMPERATURE_ERROR_CHAR_HEIGHT
 
 #define  TIP_TEMPERATURE_STANDBY_BG_COLOR SOLARIZED_24b_base3
 #define  TIP_TEMPERATURE_STANDBY_FG_COLOR SOLARIZED_24b_cyan
-#define  TIP_TEMPERATURE_STANDBY_FONT ucg_font_helvB12_hr
+#define  TIP_TEMPERATURE_STANDBY_FONT ucg_font_helvB12_hf
+#define  TIP_TEMPERATURE_STANDBY_LENGTH 5
+#define  TIP_TEMPERATURE_STANDBY_CHAR_WIDTH 14
+#define  TIP_TEMPERATURE_STANDBY_CHAR_HEIGHT 17
+#define  TIP_TEMPERATURE_STANDBY_STRING_WIDTH (TIP_TEMPERATURE_STANDBY_LENGTH * TIP_TEMPERATURE_STANDBY_CHAR_WIDTH)
 #define  TIP_TEMPERATURE_STANDBY_MASK 0x4000u
-#define  TIP_TEMPERATURE_STANDBY_X 10
-#define  TIP_TEMPERATURE_STANDBY_Y 32
-#define  TIP_TEMPERATURE_STANDBY_HEIGHT 16
+#define  TIP_TEMPERATURE_STANDBY_X 0
+#define  TIP_TEMPERATURE_STANDBY_Y TIP_TEMPERATURE_STANDBY_CHAR_HEIGHT
+#define  TIP_TEMPERATURE_STANDBY_HEIGHT TIP_TEMPERATURE_STANDBY_CHAR_HEIGHT
 
 
 static inline void displayTipTemperature() {
-    //do we have to display error state?
-    if (globals.actual.flagsRegister.heaterTempSensorError) {
-        if ((shownValues.tipTemperature & TIP_TEMPERATURE_ERROR_MASK) != TIP_TEMPERATURE_ERROR_MASK) {
-            display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
-            display.drawBox(0, 0, 128, 64);
-            display.setFont(TIP_TEMPERATURE_ERROR_FONT);
-            display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_ERROR_FG_COLOR);
-            display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_ERROR_BG_COLOR);
-            display.setPrintPos(TIP_TEMPERATURE_ERROR_X, TIP_TEMPERATURE_ERROR_Y);
-            // ignore everything else, just display error
-            display.print("  ERROR ");
-            display.setPrintPos(TIP_TEMPERATURE_ERROR_X, TIP_TEMPERATURE_ERROR_Y+16);
-            display.print("Tip temp.");
-            shownValues.tipTemperature = TIP_TEMPERATURE_ERROR_MASK;
-        }
-    } else if (globals.actual.flagsRegister.heaterStandby) {
-        // stand by mode, display temperature and "standby"
-        if ((shownValues.tipTemperature) != (globals.actual.tipTemperature | TIP_TEMPERATURE_STANDBY_MASK)) {        
-            display.setFont(TIP_TEMPERATURE_STANDBY_FONT);
-            // display standby and tip temperature
-            if (shownValues.tipTemperature < TIP_TEMPERATURE_STANDBY_MASK) {
+    for (int handle = 0; handle < MAX_HANDLES; handle++) {
+        //do we have to display error state?
+        if (globals.handleActuals[handle].flagsRegister.heaterTempSensorError) {
+            if ((shownValues.handle[handle].tipTemperature & TIP_TEMPERATURE_ERROR_MASK) != TIP_TEMPERATURE_ERROR_MASK) {
                 display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
-                display.drawBox(0, 0, 128, 64); 
-                display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_STANDBY_FG_COLOR);
-                display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_STANDBY_BG_COLOR);
-                display.setPrintPos(TIP_TEMPERATURE_STANDBY_X, TIP_TEMPERATURE_STANDBY_Y);
-                display.print("STANDBY");
+                display.drawBox(handle * SCREEN_COL_WIDTH, 0, (handle+1) * SCREEN_COL_WIDTH, TIP_TEMPERATURE_CHAR_HEIGHT);
+                display.setFont(TIP_TEMPERATURE_ERROR_FONT);
+                display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_ERROR_FG_COLOR);
+                display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_ERROR_BG_COLOR);
+                display.setPrintPos(TIP_TEMPERATURE_ERROR_X + handle * SCREEN_COL_WIDTH, TIP_TEMPERATURE_ERROR_Y);
+                // ignore everything else, just display error
+                display.print(" ERROR ");
+                display.setPrintPos(TIP_TEMPERATURE_ERROR_X + handle * SCREEN_COL_WIDTH, TIP_TEMPERATURE_ERROR_Y+16);
+                display.print("Tip Temp.");
+                shownValues.handle[handle].tipTemperature = TIP_TEMPERATURE_ERROR_MASK;
             }
+        } else if (globals.handleActuals[handle].flagsRegister.heaterStandby) {
+            // stand by mode, display temperature and "standby"
+            if ((shownValues.handle[handle].tipTemperature) != (globals.handleActuals[handle].tipTemperature | TIP_TEMPERATURE_STANDBY_MASK)) {        
+                display.setFont(TIP_TEMPERATURE_STANDBY_FONT);
+                // display standby and tip temperature
+                if (shownValues.handle[handle].tipTemperature < TIP_TEMPERATURE_STANDBY_MASK) {
+                    display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
+                    display.drawBox(0 + handle * SCREEN_COL_WIDTH, 0, (handle+1) * SCREEN_COL_WIDTH + TIP_TEMPERATURE_STRING_WIDTH, TIP_TEMPERATURE_CHAR_HEIGHT);
+                    display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_STANDBY_FG_COLOR);
+                    display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_STANDBY_BG_COLOR);
+                    display.setPrintPos(TIP_TEMPERATURE_STANDBY_X + handle * SCREEN_COL_WIDTH, TIP_TEMPERATURE_STANDBY_Y);
+                    display.print("STANDBY");
+                }
 
-            if ((shownValues.tipTemperature & ~TIP_TEMPERATURE_STANDBY_MASK) != globals.actual.tipTemperature) {
-                display.setPrintPos(TIP_TEMPERATURE_STANDBY_X, TIP_TEMPERATURE_STANDBY_Y+TIP_TEMPERATURE_STANDBY_HEIGHT);
-                display.print(globals.actual.tipTemperature);
+                if ((shownValues.handle[handle].tipTemperature & ~TIP_TEMPERATURE_STANDBY_MASK) != globals.handleActuals[handle].tipTemperature) {
+                    display.setPrintPos(TIP_TEMPERATURE_STANDBY_X + handle * SCREEN_COL_WIDTH, TIP_TEMPERATURE_STANDBY_Y+TIP_TEMPERATURE_STANDBY_HEIGHT);
+                    display.print(globals.handleActuals[handle].tipTemperature);
+                }
+
+                shownValues.handle[handle].tipTemperature = globals.handleActuals[handle].tipTemperature | TIP_TEMPERATURE_STANDBY_MASK;
             }
-
-            shownValues.tipTemperature = globals.actual.tipTemperature | TIP_TEMPERATURE_STANDBY_MASK;
+        } else {
+            //normal display
+            display.setFont(TIP_TEMPERATURE_FONT);
+            display.setPrintPos(TIP_TEMPERATURE_X + handle * TIP_TEMPERATURE_X2, TIP_TEMPERATURE_Y);
+            uint8_t tempNew = globals.handleActuals[handle].tipTemperature / 100; //hundreds number
+            uint8_t tempOld = shownValues.handle[handle].tipTemperature / 100; //hundreds number
+        
+            display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
+            if (tempNew != tempOld) {
+                display.setPrintPos(TIP_TEMPERATURE_X + (handle * TIP_TEMPERATURE_X2), TIP_TEMPERATURE_Y);
+                //display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
+                //display.print(tempOld);
+                //display.setPrintPos(TIP_TEMPERATURE_X + (handle * TIP_TEMPERATURE_X2), TIP_TEMPERATURE_Y);
+                //display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
+                display.print(tempNew);
+            }
+            // tens
+            tempNew = (globals.handleActuals[handle].tipTemperature % 100) / 10;
+            tempOld = (shownValues.handle[handle].tipTemperature % 100) / 10;
+            if (tempNew != tempOld) {
+                display.setPrintPos(TIP_TEMPERATURE_X + (handle * TIP_TEMPERATURE_X2) + TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
+                //display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
+                //display.print(tempOld);
+                //display.setPrintPos(TIP_TEMPERATURE_X + (handle * TIP_TEMPERATURE_X2) + TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);            
+                //display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
+                display.print(tempNew);
+            }
+            //units
+            tempNew = globals.handleActuals[handle].tipTemperature % 10;
+            tempOld = shownValues.handle[handle].tipTemperature % 10;
+            if (tempNew != tempOld) {
+                display.setPrintPos(TIP_TEMPERATURE_X + handle * TIP_TEMPERATURE_X2 + 2 * TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
+                //display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
+                //display.print(tempOld);
+                //display.setPrintPos(TIP_TEMPERATURE_X + handle * TIP_TEMPERATURE_X2 + 2 * TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
+                //display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
+                display.print(tempNew);
+            }
+            shownValues.handle[handle].tipTemperature = globals.handleActuals[handle].tipTemperature;
         }
-    } else {
-        //normal display
-        display.setFont(TIP_TEMPERATURE_FONT);
-        display.setPrintPos(TIP_TEMPERATURE_X, TIP_TEMPERATURE_Y);
-        uint8_t tempNew = globals.actual.tipTemperature / 100; //hundreds number
-        uint8_t tempOld = shownValues.tipTemperature / 100; //hundreds number
-    
-        display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
-        if (tempNew != tempOld) {
-            display.print(tempNew);
-        }
-        // tens
-        tempNew = (globals.actual.tipTemperature % 100) / 10;
-        tempOld = (shownValues.tipTemperature % 100) / 10;
-        if (tempNew != tempOld) {
-            display.setPrintPos(TIP_TEMPERATURE_X + TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
-            display.print(tempNew);
-        }
-        //units
-        tempNew = globals.actual.tipTemperature % 10;
-        tempOld = shownValues.tipTemperature % 10;
-        if (tempNew != tempOld) {
-            display.setPrintPos(TIP_TEMPERATURE_X + 2 * TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
-            display.print(tempNew);
-        }
-        shownValues.tipTemperature = globals.actual.tipTemperature;
     }
 }
 
 
-#define  TARGET_TEMPERATURE_LENGTH 3
-#define  TARGET_TEMPERATURE_X 48
-#define  TARGET_TEMPERATURE_Y 106
-#define  TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base3
-#define  TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_green
-#define  SELECTED_TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base01
-#define  SELECTED_TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_yellow
-#define  HIGHLIGHTED_TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base01
-#define  HIGHLIGHTED_TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_orange
-#define  TARGET_TEMPERATURE_FONT ucg_font_logisoso22_hr
-#define  TARGET_TEMPERATURE_FONT_SIZE 2
-#define  TARGET_TEMPERATURE_SELECTED_MASK 0x8000u
-#define  TARGET_TEMPERATURE_HIGHLIGHTED_MASK 0x4000u
+    #define  TARGET_TEMPERATURE_LENGTH 3
+    #define  TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base3
+    #define  TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_green
+    #define  SELECTED_TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base01
+    #define  SELECTED_TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_yellow
+    #define  HIGHLIGHTED_TARGET_TEMPERATURE_BG_COLOR SOLARIZED_24b_base01
+    #define  HIGHLIGHTED_TARGET_TEMPERATURE_FG_COLOR SOLARIZED_24b_orange
+    #define  TARGET_TEMPERATURE_FONT ucg_font_logisoso22_hn
+    #define  TARGET_TEMPERATURE_CHAR_WIDTH 13
+    #define  TARGET_TEMPERATURE_CHAR_HEIGHT 27
+    #define  TARGET_TEMPERATURE_X ((SCREEN_COL_WIDTH - (TARGET_TEMPERATURE_LENGTH*TARGET_TEMPERATURE_CHAR_WIDTH))/2)
+    #define  TARGET_TEMPERATURE_Y (TIP_TEMPERATURE_Y + TARGET_TEMPERATURE_CHAR_HEIGHT + 5)
+    #define  TARGET_TEMPERATURE_SELECTED_MASK 0x8000u
+    #define  TARGET_TEMPERATURE_HIGHLIGHTED_MASK 0x4000u
 
 static inline void displayTargetTemperature() {
-    extern State_t selectSetPoint;
-    uint16_t whatToShow = globals.persistent.targetTemperature;
-    display.setFont(TARGET_TEMPERATURE_FONT);
-    display.setPrintPos(TARGET_TEMPERATURE_X, TARGET_TEMPERATURE_Y);
-    if (selectSetPoint.flags.selected) {
-        display.setColor(FG_COLOR_IDX, SELECTED_TARGET_TEMPERATURE_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, SELECTED_TARGET_TEMPERATURE_BG_COLOR);
-        whatToShow = globals.actual.fsmTargetTemperature | TARGET_TEMPERATURE_SELECTED_MASK;
-    } else if (selectSetPoint.flags.highlighted) {
-        display.setColor(FG_COLOR_IDX, HIGHLIGHTED_TARGET_TEMPERATURE_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, HIGHLIGHTED_TARGET_TEMPERATURE_BG_COLOR);
-        whatToShow = whatToShow | TARGET_TEMPERATURE_HIGHLIGHTED_MASK;
-    } else {
-        display.setColor(FG_COLOR_IDX, TARGET_TEMPERATURE_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, TARGET_TEMPERATURE_BG_COLOR);
+    extern SelectSetPointState selectSetPoint;
+    extern SetPointState setPoint;
+    for (int handle = 0; handle < MAX_HANDLES; handle++) {
+        uint16_t whatToShow = globals.handlePersistent[handle].targetTemperature;
+        display.setFont(TARGET_TEMPERATURE_FONT);
+        display.setPrintPos(TARGET_TEMPERATURE_X + handle * SCREEN_COL_WIDTH, TARGET_TEMPERATURE_Y);
+        if (((selectSetPoint.handle == handle) && (selectSetPoint.flags.selected)) ||
+            ((setPoint.handle == handle) && (setPoint.flags.selected))) {
+            display.setColor(FG_COLOR_IDX, SELECTED_TARGET_TEMPERATURE_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, SELECTED_TARGET_TEMPERATURE_BG_COLOR);
+            whatToShow = globals.handleActuals[handle].fsmTargetTemperature | TARGET_TEMPERATURE_SELECTED_MASK;
+        } else if ((selectSetPoint.handle == handle) && (selectSetPoint.flags.highlighted)) {
+            display.setColor(FG_COLOR_IDX, HIGHLIGHTED_TARGET_TEMPERATURE_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, HIGHLIGHTED_TARGET_TEMPERATURE_BG_COLOR);
+            whatToShow = whatToShow | TARGET_TEMPERATURE_HIGHLIGHTED_MASK;
+        } else {
+            display.setColor(FG_COLOR_IDX, TARGET_TEMPERATURE_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, TARGET_TEMPERATURE_BG_COLOR);
+        }
+        if (whatToShow != shownValues.handle[handle].targetTemperature) {
+            display.print(whatToShow & (~TARGET_TEMPERATURE_SELECTED_MASK) & (~TARGET_TEMPERATURE_HIGHLIGHTED_MASK));
+            shownValues.handle[handle].targetTemperature = whatToShow;
+        }
     }
-    if (whatToShow != shownValues.targetTemperature) {
-        display.print(whatToShow & (~TARGET_TEMPERATURE_SELECTED_MASK) & (~TARGET_TEMPERATURE_HIGHLIGHTED_MASK));
-        shownValues.targetTemperature = whatToShow;
-    }
-
 }
 
 
 #define  HANDLE_TYPE_X 8
-#define  HANDLE_TYPE_Y 132
 #define  HANDLE_TYPE_BG_COLOR SOLARIZED_24b_base3
 #define  HANDLE_TYPE_FG_COLOR SOLARIZED_24b_blue
-#define  HANDLE_TYPE_FONT ucg_font_helvB12_hr
-#define  HANDLE_TYPE_FONT_SIZE 2
+#define  HANDLE_TYPE_FONT ucg_font_helvB12_hf
+#define  HANDLE_TYPE_CHAR_WIDTH 15
+#define  HANDLE_TYPE_CHAR_HEIGHT 20
+#define  HANDLE_TYPE_Y (TARGET_TEMPERATURE_Y + HANDLE_TYPE_CHAR_HEIGHT)
 
 static inline void displayHandleType() {
     display.setFont(HANDLE_TYPE_FONT);
-    display.setPrintPos(HANDLE_TYPE_X, HANDLE_TYPE_Y);
     
-    if (globals.actual.handleType != shownValues.handleType) {
-        switch (globals.actual.handleType) {
-            case HT_FMRP:
-                display.setColor(FG_COLOR_IDX, HANDLE_TYPE_FG_COLOR);
-                display.setColor(BG_COLOR_IDX, HANDLE_TYPE_BG_COLOR);
-                display.print("  FMRP: ");
-                display.print(globals.actual.handleTemperature);
-                display.print("`C  ");
-                break;
-            default:
-                display.setColor(FG_COLOR_IDX, ERROR_FG_COLOR);
-                display.setColor(BG_COLOR_IDX, ERROR_BG_COLOR);
-                display.print(" NO HANDLE!  ");
-                break;
+    for (int handle = 0; handle < MAX_HANDLES; handle++) {
+        display.setPrintPos(HANDLE_TYPE_X + handle * SCREEN_COL_WIDTH, HANDLE_TYPE_Y);
+        if (globals.handleActuals[handle].handleType != shownValues.handle[handle].handleType) {
+            switch (globals.handleActuals[handle].handleType) {
+                case HT_FMRP:
+                    display.setColor(FG_COLOR_IDX, HANDLE_TYPE_FG_COLOR);
+                    display.setColor(BG_COLOR_IDX, HANDLE_TYPE_BG_COLOR);
+                    display.print("FMRP: ");
+                    display.print(globals.handleActuals[handle].handleTemperature);
+                    display.print("`C ");
+                    break;
+                default:
+                    display.setColor(FG_COLOR_IDX, ERROR_FG_COLOR);
+                    display.setColor(BG_COLOR_IDX, ERROR_BG_COLOR);
+                    display.print("NO HANDLE!");
+                    break;
+            }
+            shownValues.handle[handle].handleType = globals.handleActuals[handle].handleType;
         }
-        shownValues.handleType = globals.actual.handleType;
     }
-
 }
 
 
@@ -191,8 +239,10 @@ static inline void displayHandleType() {
 #define  MENU_LINE_BG_COLOR SOLARIZED_24b_base3
 #define  MENU_LINE_FG_COLOR SOLARIZED_24b_blue
 //#define  MENU_LINE_FONT ucg_font_helvB08_hr
-#define  MENU_LINE_FONT ucg_font_helvB12_hr
-#define  MENU_LINE_FONT_SIZE 2
+#define  MENU_LINE_FONT ucg_font_helvB12_hf
+#define  MENU_LINE_CHAR_WIDTH 15
+#define  MENU_LINE_CHAR_HEIGHT 20
+#define  MENU_LINE_Y (HANDLE_TYPE_Y + MENU_LINE_CHAR_HEIGHT)
 
 static inline void displayMenuBar() {
     display.setFont(MENU_LINE_FONT);
@@ -215,8 +265,10 @@ static inline void displayMenuBar() {
 #define  HIGHLIGHTED_SETPOINT_FG_COLOR SOLARIZED_24b_yellow
 
 //#define  MENU_LINE_FONT ucg_font_helvB08_hr
-#define  SETPOINT_FONT ucg_font_helvB12_hr
-
+#define  SETPOINT_FONT ucg_font_helvB12_hf
+#define  SETPOINT_CHAR_WIDTH 15
+#define  SETPOINT_CHAR_HEIGHT 20
+#define  SETPOINT_Y (MENU_LINE_Y /*+ SETPOINT_CHAR_HEIGHT*/)
 
 static inline void displaySetpoints() {
     extern State_t lowestSetPoint;
@@ -226,7 +278,7 @@ static inline void displaySetpoints() {
     display.setFont(SETPOINT_FONT);
     
     //setpoint 1
-    uint16_t temp = globals.persistent.setpoints[0];
+    uint16_t temp = globals.setpoints[0];
     display.setPrintPos(SETPOINT_X, SETPOINT_Y);
     if (lowestSetPoint.flags.highlighted) {
         temp = temp | SETPOINT_HIGHLIGHTED_MASK;
@@ -237,12 +289,12 @@ static inline void displaySetpoints() {
         display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
     }
     if (temp != shownValues.lowestSetpoint) {
-        display.print(globals.persistent.setpoints[0]);
+        display.print(globals.setpoints[0]);
         shownValues.lowestSetpoint = temp;
     }
 
     //setpoint 2
-    temp = globals.persistent.setpoints[1];
+    temp = globals.setpoints[1];
     display.setPrintPos(SETPOINT_X + SETPOINT_WIDTH, SETPOINT_Y);
     if (middleSetPoint.flags.highlighted) {
         temp = temp | SETPOINT_SELECTED_MASK;
@@ -253,12 +305,12 @@ static inline void displaySetpoints() {
         display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
     }
     if (temp != shownValues.middleSetpoint) {
-        display.print(globals.persistent.setpoints[1]);
+        display.print(globals.setpoints[1]);
         shownValues.middleSetpoint = temp;
     }
 
     //setpoint 3
-    temp = globals.persistent.setpoints[1];
+    temp = globals.setpoints[1];
     display.setPrintPos(SETPOINT_X + 2 * SETPOINT_WIDTH, SETPOINT_Y);
     if (highestSetPoint.flags.highlighted) {
         temp = temp | SETPOINT_SELECTED_MASK;
@@ -269,12 +321,9 @@ static inline void displaySetpoints() {
         display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
     }
     if (temp != shownValues.highestSetpoint) {
-        display.print(globals.persistent.setpoints[2]);
+        display.print(globals.setpoints[2]);
         shownValues.highestSetpoint = temp;
     }
-
-    
-
 }
 
 

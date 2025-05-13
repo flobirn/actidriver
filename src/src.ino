@@ -9,10 +9,10 @@ extern GlobalData_t globals;
 
 void button_down_isr() {
   if (digitalRead(BUTTON_B_PIN)) {
-    globals.actual.counterNew++;
+    globals.counterNew++;
     //fsm_handleEvent(EVT_DOWN);
   } else {
-    globals.actual.counterNew--;
+    globals.counterNew--;
     //fsm_handleEvent(EVT_UP);
   }
 }
@@ -29,7 +29,7 @@ void setup() {
     pinMode(BUTTON_B_PIN, INPUT);
     pinMode(BUTTON_SW_PIN, INPUT);
     attachInterrupt(digitalPinToInterrupt(BUTTON_A_PIN), button_down_isr, RISING);
-    globals.actual.flagsRegister.buttonState = 1;
+    globals.buttonState = 1;
     Serial.println("Actidriver setup done");
 }
 
@@ -39,10 +39,15 @@ void loop() {
   uint8_t counter = 0;
   uint8_t serialIn;
   
-  globals.persistent.targetTemperature = 350;
-  globals.actual.tipTemperature = 250;
-  globals.actual.handleType = HT_FMRP;
-  globals.actual.handleTemperature = 45;
+  globals.handlePersistent[0].targetTemperature = 350;
+  globals.handleActuals[0].tipTemperature = 250;
+  globals.handleActuals[0].handleType = HT_FMRP;
+  globals.handleActuals[0].handleTemperature = 45;
+  globals.handlePersistent[1].targetTemperature = 380;
+  globals.handleActuals[1].tipTemperature = 290;
+  globals.handleActuals[1].handleType = HT_FMRP;
+  globals.handleActuals[1].handleTemperature = 55;
+
 
 
   while (1) {
@@ -59,16 +64,18 @@ void loop() {
           fsm_handleEvent(EVT_CLICK);
           break;
         case 'h':
-          if (globals.actual.handleTemperature == HT_FMRP) 
-            globals.actual.handleType = HT_NONE;
+          if (globals.handleActuals[0].handleTemperature == HT_FMRP) 
+            globals.handleActuals[0].handleType = HT_NONE;
           else 
-            globals.actual.handleType = HT_FMRP;
+            globals.handleActuals[0].handleType = HT_FMRP;
           break;
         case 's':
-          globals.actual.flagsRegister.heaterStandby = ~globals.actual.flagsRegister.heaterStandby;
+          globals.handleActuals[0].flagsRegister.heaterStandby = ~globals.handleActuals[0].flagsRegister.heaterStandby;
+          globals.handleActuals[1].flagsRegister.heaterStandby = ~globals.handleActuals[1].flagsRegister.heaterStandby;
           break;
         case 'e':
-          globals.actual.flagsRegister.heaterTempSensorError = ~globals.actual.flagsRegister.heaterTempSensorError;
+          globals.handleActuals[0].flagsRegister.heaterTempSensorError = ~globals.handleActuals[0].flagsRegister.heaterTempSensorError;
+          globals.handleActuals[1].flagsRegister.heaterTempSensorError = ~globals.handleActuals[1].flagsRegister.heaterTempSensorError;
           break;
 
 
@@ -77,20 +84,20 @@ void loop() {
     }
 
     // detect rotary encoder event
-    if(globals.actual.counterNew > 0)
+    if(globals.counterNew > 0)
       fsm_handleEvent(EVT_UP);
-    if(globals.actual.counterNew < 0)
+    if(globals.counterNew < 0)
       fsm_handleEvent(EVT_DOWN);
 
     noInterrupts();
-    globals.actual.counterNew = 0;
+    globals.counterNew = 0;
     interrupts();
 
-    if (globals.actual.tipTemperature < 100) dir = 1;
-    if (globals.actual.tipTemperature > 500) dir = -1;
-    globals.actual.tipTemperature += dir;
-    //if (counter % 5 == 1) globals.actual.handleType = HT_NONE;
-    if (counter % 5 == 3) globals.actual.handleType = HT_FMRP;
+    if (globals.handleActuals[0].tipTemperature < 100) dir = 1;
+    if (globals.handleActuals[0].tipTemperature > 500) dir = -1;
+    globals.handleActuals[0].tipTemperature += dir;
+    //if (counter % 5 == 1) globals.handleActuals.handleType = HT_NONE;
+    if (counter % 5 == 3) globals.handleActuals[0].handleType = HT_FMRP;
     //unsigned long start = micros();
     mainmenu_display();
     //unsigned long end = micros();
@@ -98,10 +105,10 @@ void loop() {
     
     // read rotarry encoder switch
     if ((!digitalRead(BUTTON_SW_PIN)) && //button pressed?
-        (globals.actual.flagsRegister.buttonState))
+        (globals.buttonState))
           fsm_handleEvent(EVT_CLICK);
 
-    globals.actual.flagsRegister.buttonState = digitalRead(BUTTON_SW_PIN);
+    globals.buttonState = digitalRead(BUTTON_SW_PIN);
 
     counter++;
     delay(1000);

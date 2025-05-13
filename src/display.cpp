@@ -19,8 +19,9 @@ void display_setup() {
 #ifdef LIB_UCGLIB
     display.begin(UCG_FONT_MODE_SOLID);
     display.clearScreen();
+    display.setRotate90();
     display.setColor(0, SOLARIZED_24b_base3 );
-    display.drawBox(0, 0, 132, 160);
+    display.drawBox(0, 0, 160, 132);
 #endif
 }
 

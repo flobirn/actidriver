@@ -3,21 +3,22 @@
 
 #include "Arduino.h"
 
+#define MAX_HANDLES 2
+
 #define NUMBER_OF_SETPOINTS 3
 
 typedef struct {
     uint8_t heaterActive:1;           //* heater state
     uint8_t heaterStandby:1;          //* heater in stand by mode
     uint8_t heaterTempSensorError:1;  //* temperature sensor for heater could not be read
-    uint8_t buttonState:1;
     
-    uint8_t reserve:4;
-} FlagFields_t;
+    uint8_t reserve:5;
+} HandleFlagFields_t;
 
 typedef union {
     uint8_t value;
-    FlagFields_t flags;
-} FlagRegister_t;
+    HandleFlagFields_t flags;
+} HandleFlagRegister_t;
 
 typedef enum {
     HT_NONE = 0,
@@ -34,32 +35,34 @@ typedef struct {
     
     HandleType_t handleType;
 
-    FlagFields_t flagsRegister;
+    HandleFlagFields_t flagsRegister;
 
     // data needed by fsm and menus
     uint16_t fsmTargetTemperature;
 
-    //rotary encoder
-    int8_t counterNew;
-    int8_t counterOld;
-    
-} VolatileData_t;
+   
+} HanldeVolatileData_t;
 
 typedef struct {
     // tip data
     uint16_t targetTemperature;
-    uint16_t setpoints[NUMBER_OF_SETPOINTS];
 
 
     // PID parameters
     double Kp;
     double Ki;
     double Kd;
-} PersistentData_t;
+} HandlePersistentData_t;
 
 typedef struct {
-    VolatileData_t   actual;
-    PersistentData_t persistent;
+    HanldeVolatileData_t   handleActuals[MAX_HANDLES];
+    HandlePersistentData_t handlePersistent[MAX_HANDLES];
+    uint16_t setpoints[NUMBER_OF_SETPOINTS];
+    //rotary encoder
+    int8_t counterNew;
+    int8_t counterOld;
+    uint8_t buttonState:1;
+
 } GlobalData_t;
 
 
