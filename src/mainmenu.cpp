@@ -15,17 +15,13 @@ typedef struct {
 
 typedef struct {
     HandleDisplayedValues_t handle[MAX_HANDLES];
-    uint16_t lowestSetpoint;
-    uint16_t middleSetpoint;
-    uint16_t highestSetpoint;
+    uint16_t setPoints[NUMBER_OF_SETPOINTS];
 } DisplayedData_t;
 
 
 DisplayedData_t shownValues = {
     .handle = {{0}, {0}}, 
-    .lowestSetpoint = 0,
-    .middleSetpoint = 0,
-    .highestSetpoint = 0,
+    .setPoints = {0},
 };
 
 /* main menu configuration */
@@ -255,10 +251,8 @@ static inline void displayMenuBar() {
 }
 
 #define  SETPOINT_X 10
-#define  SETPOINT_Y 154
 #define  SETPOINT_BG_COLOR SOLARIZED_24b_base3
 #define  SETPOINT_FG_COLOR SOLARIZED_24b_blue
-#define  SETPOINT_WIDTH 40
 #define  SETPOINT_SELECTED_MASK 0x8000u
 #define  SETPOINT_HIGHLIGHTED_MASK 0x4000u
 #define  HIGHLIGHTED_SETPOINT_BG_COLOR SOLARIZED_24b_base02
@@ -268,61 +262,29 @@ static inline void displayMenuBar() {
 #define  SETPOINT_FONT ucg_font_helvB12_hf
 #define  SETPOINT_CHAR_WIDTH 15
 #define  SETPOINT_CHAR_HEIGHT 20
+#define  SETPOINT_WIDTH (SETPOINT_CHAR_WIDTH * 3)
 #define  SETPOINT_Y (MENU_LINE_Y /*+ SETPOINT_CHAR_HEIGHT*/)
 
 static inline void displaySetpoints() {
-    extern State_t lowestSetPoint;
-    extern State_t middleSetPoint;
-    extern State_t highestSetPoint;
 
+    extern SetPointState setPoint;
     display.setFont(SETPOINT_FONT);
     
-    //setpoint 1
-    uint16_t temp = globals.setpoints[0];
-    display.setPrintPos(SETPOINT_X, SETPOINT_Y);
-    if (lowestSetPoint.flags.highlighted) {
-        temp = temp | SETPOINT_HIGHLIGHTED_MASK;
-        display.setColor(FG_COLOR_IDX, HIGHLIGHTED_SETPOINT_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, HIGHLIGHTED_SETPOINT_BG_COLOR);
-    } else {
-        display.setColor(FG_COLOR_IDX, SETPOINT_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
-    }
-    if (temp != shownValues.lowestSetpoint) {
-        display.print(globals.setpoints[0]);
-        shownValues.lowestSetpoint = temp;
-    }
-
-    //setpoint 2
-    temp = globals.setpoints[1];
-    display.setPrintPos(SETPOINT_X + SETPOINT_WIDTH, SETPOINT_Y);
-    if (middleSetPoint.flags.highlighted) {
-        temp = temp | SETPOINT_SELECTED_MASK;
-        display.setColor(FG_COLOR_IDX, HIGHLIGHTED_SETPOINT_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, HIGHLIGHTED_SETPOINT_BG_COLOR);
-    } else {
-        display.setColor(FG_COLOR_IDX, SETPOINT_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
-    }
-    if (temp != shownValues.middleSetpoint) {
-        display.print(globals.setpoints[1]);
-        shownValues.middleSetpoint = temp;
-    }
-
-    //setpoint 3
-    temp = globals.setpoints[1];
-    display.setPrintPos(SETPOINT_X + 2 * SETPOINT_WIDTH, SETPOINT_Y);
-    if (highestSetPoint.flags.highlighted) {
-        temp = temp | SETPOINT_SELECTED_MASK;
-        display.setColor(FG_COLOR_IDX, HIGHLIGHTED_SETPOINT_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, HIGHLIGHTED_SETPOINT_BG_COLOR);
-    } else {
-        display.setColor(FG_COLOR_IDX, SETPOINT_FG_COLOR);
-        display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
-    }
-    if (temp != shownValues.highestSetpoint) {
-        display.print(globals.setpoints[2]);
-        shownValues.highestSetpoint = temp;
+    for (uint8_t point = 0; point < NUMBER_OF_SETPOINTS; point++) {
+        uint16_t temp = globals.setpoints[setPoint.setPoint];
+        display.setPrintPos(SETPOINT_X + point * SETPOINT_WIDTH, SETPOINT_Y);
+        if ((setPoint.flags.highlighted) && (point == setPoint.setPoint)) {
+            temp = temp | SETPOINT_HIGHLIGHTED_MASK;
+            display.setColor(FG_COLOR_IDX, HIGHLIGHTED_SETPOINT_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, HIGHLIGHTED_SETPOINT_BG_COLOR);
+        } else {
+            display.setColor(FG_COLOR_IDX, SETPOINT_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, SETPOINT_BG_COLOR);
+        }
+        if (temp != shownValues.setPoints[point]) {
+            display.print(globals.setpoints[0]);
+            shownValues.setPoints[point] = temp;
+        }
     }
 }
 
