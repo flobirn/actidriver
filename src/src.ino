@@ -24,12 +24,23 @@ void setup() {
     display_setup();
     delay(1000);
     mainmenu_init();
-// rotarry encoder
+    Serial.println("Setup rotary encoder");
+// rotary encoder
     pinMode(BUTTON_A_PIN, INPUT);
     pinMode(BUTTON_B_PIN, INPUT);
     pinMode(BUTTON_SW_PIN, INPUT);
     attachInterrupt(digitalPinToInterrupt(BUTTON_A_PIN), button_down_isr, RISING);
     globals.buttonState = 1;
+//  handle setup
+    Serial.println("Setup heater pwm");
+    for (uint8_t handle=0; handle < MAX_HANDLES; handle++) {
+      pinMode(globals.handleConfig[handle].heaterPin, OUTPUT);
+      analogWrite(globals.handleConfig[handle].heaterPin, 0);
+    }
+//  adc setup
+    Serial.println("Setup reference for ADC");
+    analogReference(EXTERNAL);
+
     Serial.println("Actidriver setup done");
 }
 
@@ -113,7 +124,7 @@ void loop() {
 
 
     counter++;
-    delay(1000);
+    //delay(1000);
   }
     
 }

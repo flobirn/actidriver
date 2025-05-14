@@ -63,7 +63,7 @@ State* SetPointState::onRight() {
         setPoint++;
         return this;
     }
-    return (switchTo(&initialState));
+    return this;
 }
 State* SetPointState::onLeft() {
     if ((flags.selected) &&

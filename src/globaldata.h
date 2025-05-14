@@ -3,6 +3,8 @@
 
 #include "Arduino.h"
 
+#include "pins.h"
+
 #define MAX_HANDLES 2
 
 #define NUMBER_OF_SETPOINTS 3
@@ -28,6 +30,14 @@ typedef enum {
 } HandleType_t;
 
 typedef struct {
+    uint8_t heaterPin;
+    uint8_t tipTcPin;
+    uint8_t ptcPin;
+    uint8_t idPin; //"in stand" and handle id
+  
+} HandleConfigData_t;
+
+typedef struct {
     uint16_t tipTemperature;
     uint8_t  handleTemperature;
 
@@ -41,7 +51,7 @@ typedef struct {
     uint16_t fsmTargetTemperature;
 
    
-} HanldeVolatileData_t;
+} HandleVolatileData_t;
 
 typedef struct {
     // tip data
@@ -55,12 +65,16 @@ typedef struct {
 } HandlePersistentData_t;
 
 typedef struct {
-    HanldeVolatileData_t   handleActuals[MAX_HANDLES];
+    //handle related data
+    HandleConfigData_t     handleConfig[MAX_HANDLES];
+    HandleVolatileData_t   handleActuals[MAX_HANDLES];
     HandlePersistentData_t handlePersistent[MAX_HANDLES];
-    uint16_t setpoints[NUMBER_OF_SETPOINTS];
+
+    uint16_t               setpoints[NUMBER_OF_SETPOINTS];
+
     //rotary encoder
-    int8_t counterNew;
-    int8_t counterOld;
+    int8_t  counterNew;
+    int8_t  counterOld;
     uint8_t buttonState:1;
 
 } GlobalData_t;
