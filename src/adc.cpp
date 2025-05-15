@@ -1,8 +1,6 @@
 #include "adc.h"
 #include "debug.h"
 
-#define DEBUG_LOG_ON
-
 #ifndef cbi
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #endif
@@ -72,9 +70,11 @@ void calibrateAdc() {
     dbgVariable("ADC offset error: ", adc_offset)
 
     readAdc(&temp, Int_1V1_channel);
-    if (temp == 0) return;
-    adc_1V1_error = (temp - ADC_1V1_VALUE) / temp;
     dbgVariable("ADC value for 1.1V: ", temp);
+    if (temp != 0) {
+        adc_1V1_error = (temp - ADC_1V1_VALUE) / temp;
+        //dbgVariable("ADC value for 1.1V: ", temp);
+    }
     dbgVariable("ADC error at 1.1V: ", adc_1V1_error);
 
     readAdc(&temp, Int_0V_channel);
@@ -100,14 +100,17 @@ void readAdc(int32_t* adcValue, Adc_Channel_t channel)
     // wait for sample & hold capacitor to update
 	delay(1);
 
-    //start first conversion
+    //start & drop first conversion
     int8_t count = SAMPLES - 1;
     sbi(ADCSRA, ADSC);
+    while ((ADCSRA & _BV(ADIF)) == 0) {};
+    sbi(ADCSRA, ADIF);
 
     //free running to get SAMPLES values
     while (count > 0) {
         if ((ADCSRA & _BV(ADIF)) != 0) {
             //start new conversion
+            //dbgVariable("Read: ", ADC)
             sbi(ADCSRA, ADIF);
             (*adcValue) += ADC;
             count--;
@@ -121,7 +124,3 @@ void readAdc(int32_t* adcValue, Adc_Channel_t channel)
     // stop ADC
     cbi(ADCSRA, ADEN);
 }
-
-#ifdef DEBUG_LOG_ON
-#undef DEBUG_LOG_ON
-#endif

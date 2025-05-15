@@ -3,6 +3,8 @@
 #include "mainmenu.h"
 #include "fsm.h"
 #include "pins.h"
+#include "adc.h"
+#include "debug.h"
 
 
 extern GlobalData_t globals;
@@ -40,6 +42,8 @@ void setup() {
 //  adc setup
     Serial.println("Setup reference for ADC");
     analogReference(EXTERNAL);
+//    setupAdc();
+    calibrateAdc();
 
     Serial.println("Actidriver setup done");
 }
@@ -122,9 +126,18 @@ void loop() {
     //Serial.println(end - start);
     
 
-
+    int32_t adcVal=0;
+   //readAdc(&adcVal, A0_channel);
+    analogReference(EXTERNAL);
+    //adcVal=analogRead(A2);
+    readAdc(&adcVal, A2_channel);
+    dbgVariable("ADC: ", adcVal);
+    readAdc(&adcVal, Int_0V_channel);
+    dbgVariable("ADC0V: ", adcVal);
+    readAdc(&adcVal, Int_1V1_channel);
+    dbgVariable("ADC0V: ", adcVal);
     counter++;
-    //delay(1000);
+    delay(1000);
   }
     
 }
