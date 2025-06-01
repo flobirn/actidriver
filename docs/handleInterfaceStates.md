@@ -25,5 +25,6 @@ sleep --> active : click or dedicated menu entry
 soft --> nc : handle not_eq current handle
 active --> nc : handle not_eq current handle
 stand --> nc : handle not_eq current handle
-```
 sleep --> nc : handle not_eq current handle
+
+```
