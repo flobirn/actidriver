@@ -20,4 +20,6 @@ HandleInterface }|--|| HandleCollection : "find handle"
 HandleInterface ||--|| Handle : "current handle"
 
 USBAdapter ||--|| Handle : modify
+
+MenuDisplay ||--|| HandleInterface : "get current handle"
 ```
