@@ -46,6 +46,7 @@ classDiagram
     class HandleInterface {
         HandlePins pins
         uint8_t handle
+        HandleState state
         uint16_t handleTemperature
         uint16_t heaterTemperature
         uint8_t  pwmDuty
