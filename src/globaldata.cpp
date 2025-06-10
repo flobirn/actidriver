@@ -1,7 +1,8 @@
 #include "globaldata.h"
+#include <avr/pgmspace.h>
 
 GlobalData_t globals = {
-    .handleConfig = {
+    .handleInterface = {
         { // left handle
             .heaterPin = HEATER_1_PIN,
             .tipTcPin  = TIP_TC_1_PIN,
@@ -38,4 +39,16 @@ GlobalData_t globals = {
     .counterOld = 0,
     .buttonState = 0,
     
+};
+
+HandleConfig_t knownHandles[1] = {
+    {//my adapation of the Weller handle
+    .type = HT_FMRP,
+    .idVoltage = 7984, //2,048V /2
+    .maxPWMPercent = 128, //for a 8-bit PWM; 0.5*12[V]^2/2[Ohm] ~ 36W
+    .coldJointRefVoltages     = {7984, 8064, 8144, 8224, 8304,},
+    .coldJointRefTemperatures = { 25,   30,   35,   40,   45  },
+    .hotJointRefVoltages      = {5824, 7472, 9136, 10816, 12480},
+    .hotJointRefTemperatures  = { 200,  250,  300,   350,   400}
+    }
 };

@@ -36,14 +36,14 @@ void setup() {
 //  handle setup
     Serial.println("Setup heater pwm");
     for (uint8_t handle=0; handle < MAX_HANDLES; handle++) {
-      pinMode(globals.handleConfig[handle].heaterPin, OUTPUT);
-      analogWrite(globals.handleConfig[handle].heaterPin, 0);
+      pinMode(globals.handleInterface[handle].heaterPin, OUTPUT);
+      analogWrite(globals.handleInterface[handle].heaterPin, 0);
     }
 //  adc setup
     Serial.println("Setup reference for ADC");
     analogReference(EXTERNAL);
-//    setupAdc();
-    calibrateAdc();
+    setupAdc();
+    //calibrateAdc();
 
     Serial.println("Actidriver setup done");
 }
@@ -63,6 +63,7 @@ void loop() {
   globals.handleActuals[1].handleType = HT_FMRP;
   globals.handleActuals[1].handleTemperature = 55;
 
+  
 
 
   while (1) {
@@ -126,16 +127,39 @@ void loop() {
     //Serial.println(end - start);
     
 
-    int32_t adcVal=0;
+    uint16_t adcVal=0;
    //readAdc(&adcVal, A0_channel);
     analogReference(EXTERNAL);
     //adcVal=analogRead(A2);
+    //calibrateAdc();
+    //dbgText("--- Handle 1 ---");
+    readAdc(&adcVal, A1_channel);
+    dbgVariable("TC1_a1:", adcVal);
     readAdc(&adcVal, A2_channel);
-    dbgVariable("ADC: ", adcVal);
+    dbgVariable("KTY1_a2:", adcVal);
+    readAdc(&adcVal, A4_channel);
+    dbgVariable("Reed1_a4:", adcVal);
+    /*dbgText("--- Handle 2 ---");
+    readAdc(&adcVal, A0_channel);
+    dbgVariable("TC2(ADC0): ", adcVal);
+    readAdc(&adcVal, A3_channel);
+    dbgVariable("KTY2(ADC3): ", adcVal);
+    readAdc(&adcVal, A5_channel);
+    dbgVariable("Reed2(ADC5): ", adcVal);*/
+
+/*   adcVal=analogRead(A0);
+    dbgVariable("ADC 0: ", adcVal);
+    adcVal=analogRead(A1);
+    dbgVariable("ADC 1: ", adcVal);
+    adcVal=analogRead(A2);
+    dbgVariable("ADC 2: ", adcVal);
+    adcVal=analogRead(A3);
+    dbgVariable("ADC 3: ", adcVal); */
     readAdc(&adcVal, Int_0V_channel);
-    dbgVariable("ADC0V: ", adcVal);
+    //dbgVariable("ADC0V:", adcVal);
     readAdc(&adcVal, Int_1V1_channel);
-    dbgVariable("ADC0V: ", adcVal);
+    //dbgVariable("ADCV1V1: ", adcVal);
+    //dbgVariable("ADCV1V1_diff:", ((int32_t) adcVal - 8800));
     counter++;
     delay(1000);
   }

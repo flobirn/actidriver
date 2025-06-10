@@ -22,5 +22,5 @@ typedef enum {
 
 void setupAdc();
 void calibrateAdc();
-void readAdc(int32_t* adcValue, Adc_Channel_t channel);
+void readAdc(uint16_t* adcValue, Adc_Channel_t channel);
 #endif

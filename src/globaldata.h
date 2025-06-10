@@ -4,6 +4,7 @@
 #include "Arduino.h"
 
 #include "pins.h"
+#include "handleconfig.h"
 
 #define MAX_HANDLES 2
 
@@ -22,20 +23,13 @@ typedef union {
     HandleFlagFields_t flags;
 } HandleFlagRegister_t;
 
-typedef enum {
-    HT_NONE = 0,
-    HT_FMRP, //* my handle
-    HT_WMRP,
-    HT_WMRT
-} HandleType_t;
-
 typedef struct {
     uint8_t heaterPin;
     uint8_t tipTcPin;
     uint8_t ptcPin;
     uint8_t idPin; //"in stand" and handle id
   
-} HandleConfigData_t;
+} HandleInterfaceData_t;
 
 typedef struct {
     uint16_t tipTemperature;
@@ -66,7 +60,7 @@ typedef struct {
 
 typedef struct {
     //handle related data
-    HandleConfigData_t     handleConfig[MAX_HANDLES];
+    HandleInterfaceData_t  handleInterface[MAX_HANDLES];
     HandleVolatileData_t   handleActuals[MAX_HANDLES];
     HandlePersistentData_t handlePersistent[MAX_HANDLES];
 

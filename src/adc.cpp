@@ -61,7 +61,7 @@ void setupAdc() {
 }
 
 void calibrateAdc() {
-    int32_t temp = 0;
+    uint16_t temp = 0;
     adc_offset = 0;
     adc_1V1_error = 0;
 
@@ -81,12 +81,13 @@ void calibrateAdc() {
     dbgVariable("ADC value for 0V after calibration: ", temp);
 
     readAdc(&temp, Int_1V1_channel);
-    dbgVariable("ADC value for 1.1V after calibration: ", temp);
+    dbgVariable("ADC value for 1.1V after calibration: ", temp);  
 }
 
-void readAdc(int32_t* adcValue, Adc_Channel_t channel)
+void readAdc(uint16_t* adcValue, Adc_Channel_t channel)
 {
     (*adcValue) = 0;
+    int32_t temp = 0;
 
     //ADMUX register
     ADMUX = ((SELECTED_REFERENCE_VOLTAGE) << 6) + ((ADC_ADJUST & 0x01) << 5) + channel; //
@@ -112,14 +113,21 @@ void readAdc(int32_t* adcValue, Adc_Channel_t channel)
             //start new conversion
             //dbgVariable("Read: ", ADC)
             sbi(ADCSRA, ADIF);
-            (*adcValue) += ADC;
+            temp += ADC;
             count--;
         }
     }
 
     //apply calibration results
-    (*adcValue) -= adc_offset;
-    (*adcValue) -= (*adcValue) * adc_1V1_error;
+    temp -= adc_offset;
+    if (temp < 0) temp = 0;
+    
+    temp -= temp * adc_1V1_error;
+    if (temp < 0) temp = 0;
+
+    if (temp > UINT16_MAX) temp = UINT16_MAX;
+
+    (*adcValue) = temp;
 
     // stop ADC
     cbi(ADCSRA, ADEN);
