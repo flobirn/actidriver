@@ -4,12 +4,33 @@
 #include "Arduino.h"
 
 #define HANDLE_NAME_LENGTH 3
+/** maximum number of elements in the adc -> temperature mapping */
 #define VT_SIZE 5
 
+/** convert from an ADC value to temperature using heater ADC to temperature mapping
+ * \param handle the index af the handle for which the temperature was read from ADC
+ * \param adcValue the value read from the ADC input of the handle temperature sensor
+ * \return the corresponding temperature as multiple of 5 degrees
+*/
+uint8_t getHeaterTemperature(uint8_t handle, uint16_t adcValue);
+/** convert from an ADC value to temperature using handle ADC to temperature mapping
+ * \param handle the index af the handle for which the temperature was read from ADC
+ * \param adcValue the value read from the ADC input for the heater thermocouple
+ * \return the corresponding temperature as multiple of 5 degrees
+*/
+uint8_t getTemperature(uint8_t handle, uint16_t adcValue);
+/** find a handle with a specific id
+ * \param adcValue the value read from ADC if the id voltage
+ * \return \li `#FH_INSTAND` if adcValue is smaller than a threshold value\n
+ * \li `#FH_NOTFOUND` if no handle with an id == adcValue (+/- accepted difference) was found\n
+ * \li 0...VT_SIZE - 1 the index of a handle with id id == adcValue (+/- accepted difference)
+ */
+int8_t findHandle(uint16_t adcValue);
+
 typedef enum {
-    HT_NONE = 0,
-    HT_FMRP, //* my handle
-    HT_USB
+    HT_NONE = 0, /**< dummyvalue */
+    HT_FMRP,     /**< handle according to actidriver schematics */
+    HT_USB       /**< handle controlled via USB */
 } HandleType_t;
 
 typedef enum {
@@ -48,7 +69,6 @@ typedef struct {
     uint8_t      sleepTimeout;
     Heater_t     heater;
 } HandleConfig_t;
-
 
 
 #endif

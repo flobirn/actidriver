@@ -73,10 +73,10 @@ uint8_t getTemperature(uint8_t handle, uint16_t adcValue) {
             if (adcValue < refferenceAdc) break;
             previousRefAdc = refferenceAdc; //store as previous value
         }
-        //reuse temp
+
         if (i == 0) {
             /* smaller than the smallest refference value:
-            assume a streight line fom (0,0) to (first adc value, first temperature)
+            assume a straight line fom (0,0) to (first adc value, first temperature)
             */
             double temperature = (EEPROM.read(Handles[handle].vtMapping[0].temperature) / refferenceAdc) * adcValue;
             return (uint8_t) temperature;
@@ -88,8 +88,8 @@ uint8_t getTemperature(uint8_t handle, uint16_t adcValue) {
             return (uint8_t) ((slope*(adcValue-previousRefAdc)) + referenceTemperature);
         }
 
-        /* greater than the greatest adcValue in vtMapping:
-           take last slope and prolong it
+        /* greater than the biggest adcValue in vtMapping:
+           take slope from the last vtMapping values and extend it up to the curent adcValue
         */
         uint8_t referenceTemperature = EEPROM.read(Handles[handle].vtMapping[VT_SIZE-1].temperature);
         double slope = (referenceTemperature - EEPROM.read(Handles[handle].vtMapping[VT_SIZE-2].temperature)) / (refferenceAdc - previousRefAdc);
@@ -97,3 +97,40 @@ uint8_t getTemperature(uint8_t handle, uint16_t adcValue) {
     }
     return 0xFF; // 1275 degrees C
 }
+
+uint8_t getHeaterTemperature(uint8_t handle, uint16_t adcValue) {
+    if (handle < handleCount) {
+        uint16_t refferenceAdc;
+        uint16_t previousRefAdc;
+        uint8_t i;
+
+        for (i = 0; i < VT_SIZE; i++) {
+            refferenceAdc = readEepromWord(Handles[handle].heater.vtMapping[i].adcValue);
+            if (adcValue < refferenceAdc) break;
+            previousRefAdc = refferenceAdc; //store as previous value
+        }
+
+        if (i == 0) {
+            /* smaller than the smallest refference value:
+            assume a straight line fom (0,0) to (first adc value, first temperature)
+            */
+            double temperature = (EEPROM.read(Handles[handle].heater.vtMapping[0].temperature) / refferenceAdc) * adcValue;
+            return (uint8_t) temperature;
+            
+        }
+        if (i < VT_SIZE) {
+            uint8_t referenceTemperature = EEPROM.read(Handles[handle].heater.vtMapping[i-1].temperature);
+            double slope = (EEPROM.read(Handles[handle].heater.vtMapping[i].temperature) - referenceTemperature) / (refferenceAdc - previousRefAdc);
+            return (uint8_t) ((slope*(adcValue-previousRefAdc)) + referenceTemperature);
+        }
+
+        /* greater than the biggest adcValue in vtMapping:
+           take slope from the last vtMapping values and extend it up to the curent adcValue
+        */
+        uint8_t referenceTemperature = EEPROM.read(Handles[handle].heater.vtMapping[VT_SIZE-1].temperature);
+        double slope = (referenceTemperature - EEPROM.read(Handles[handle].heater.vtMapping[VT_SIZE-2].temperature)) / (refferenceAdc - previousRefAdc);
+        return (uint8_t) ((slope*(adcValue-refferenceAdc)) + referenceTemperature);
+    }
+    return 0xFF; // 1275 degrees C
+}
+
