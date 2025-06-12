@@ -40,22 +40,22 @@ class State {
 };
 
 class InitialState : public State {
-    public: virtual State* onRight();
+    public: virtual State* onRight() override;
 };
 
 class SelectSetPointState : public State {
     public:
-    virtual State* onRight();
-    virtual State* onLeft();
-    virtual State* onClick();
+    virtual State* onRight() override;
+    virtual State* onLeft() override;
+    virtual State* onClick() override;
     uint8_t handle;
 };
 
 class SetPointState : public State { 
     public:
-    virtual State* onRight();
-    virtual State* onLeft();
-    virtual State* onClick();
+    virtual State* onRight() override;
+    virtual State* onLeft() override;
+    virtual State* onClick() override;
     uint8_t setPoint;
     uint8_t handle;
 };

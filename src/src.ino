@@ -5,9 +5,10 @@
 #include "pins.h"
 #include "adc.h"
 #include "debug.h"
-
+#include "handleInterface.hpp"
 
 extern GlobalData_t globals;
+extern HandleInterface* handleInterfaces[];
 
 void button_down_isr() {
   if (digitalRead(BUTTON_B_PIN)) {
@@ -34,11 +35,7 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(BUTTON_A_PIN), button_down_isr, RISING);
     globals.buttonState = 1;
 //  handle setup
-    Serial.println("Setup heater pwm");
-    for (uint8_t handle=0; handle < MAX_HANDLES; handle++) {
-      pinMode(globals.handleInterface[handle].heaterPin, OUTPUT);
-      analogWrite(globals.handleInterface[handle].heaterPin, 0);
-    }
+    
 //  adc setup
     Serial.println("Setup reference for ADC");
     analogReference(EXTERNAL);
@@ -50,21 +47,12 @@ void setup() {
 
 
 void loop() {
-  int8_t dir = 1;
-  uint8_t counter = 0;
+
   uint8_t serialIn;
   
-  globals.handlePersistent[0].targetTemperature = 350;
-  globals.handleActuals[0].tipTemperature = 250;
-  globals.handleActuals[0].handleType = HT_FMRP;
-  globals.handleActuals[0].handleTemperature = 45;
-  globals.handlePersistent[1].targetTemperature = 380;
-  globals.handleActuals[1].tipTemperature = 290;
-  globals.handleActuals[1].handleType = HT_FMRP;
-  globals.handleActuals[1].handleTemperature = 55;
-
-  
-
+  /* only for tests */
+  handleInterfaces[0]->targetTemperature = 350;
+  handleInterfaces[1]->targetTemperature = 380;
 
   while (1) {
     if(Serial.available()){
@@ -79,22 +67,6 @@ void loop() {
         case 'c':
           fsm_handleEvent(EVT_CLICK);
           break;
-        case 'h':
-          if (globals.handleActuals[0].handleTemperature == HT_FMRP) 
-            globals.handleActuals[0].handleType = HT_NONE;
-          else 
-            globals.handleActuals[0].handleType = HT_FMRP;
-          break;
-        case 's':
-          globals.handleActuals[0].flagsRegister.heaterStandby = ~globals.handleActuals[0].flagsRegister.heaterStandby;
-          globals.handleActuals[1].flagsRegister.heaterStandby = ~globals.handleActuals[1].flagsRegister.heaterStandby;
-          break;
-        case 'e':
-          globals.handleActuals[0].flagsRegister.heaterTempSensorError = ~globals.handleActuals[0].flagsRegister.heaterTempSensorError;
-          globals.handleActuals[1].flagsRegister.heaterTempSensorError = ~globals.handleActuals[1].flagsRegister.heaterTempSensorError;
-          break;
-
-
       }
 
     }
@@ -116,52 +88,11 @@ void loop() {
 
     globals.buttonState = digitalRead(BUTTON_SW_PIN);
 
-    if (globals.handleActuals[0].tipTemperature < 100) dir = 1;
-    if (globals.handleActuals[0].tipTemperature > 500) dir = -1;
-    globals.handleActuals[0].tipTemperature += dir;
-    //if (counter % 5 == 1) globals.handleActuals.handleType = HT_NONE;
-    if (counter % 5 == 3) globals.handleActuals[0].handleType = HT_FMRP;
-    //unsigned long start = micros();
-    mainmenu_display();
-    //unsigned long end = micros();
-    //Serial.println(end - start);
-    
-
-    uint16_t adcVal=0;
-   //readAdc(&adcVal, A0_channel);
     analogReference(EXTERNAL);
-    //adcVal=analogRead(A2);
-    //calibrateAdc();
-    //dbgText("--- Handle 1 ---");
-    readAdc(&adcVal, A1_channel);
-    dbgVariable("TC1_a1:", adcVal);
-    readAdc(&adcVal, A2_channel);
-    dbgVariable("KTY1_a2:", adcVal);
-    readAdc(&adcVal, A4_channel);
-    dbgVariable("Reed1_a4:", adcVal);
-    /*dbgText("--- Handle 2 ---");
-    readAdc(&adcVal, A0_channel);
-    dbgVariable("TC2(ADC0): ", adcVal);
-    readAdc(&adcVal, A3_channel);
-    dbgVariable("KTY2(ADC3): ", adcVal);
-    readAdc(&adcVal, A5_channel);
-    dbgVariable("Reed2(ADC5): ", adcVal);*/
-
-/*   adcVal=analogRead(A0);
-    dbgVariable("ADC 0: ", adcVal);
-    adcVal=analogRead(A1);
-    dbgVariable("ADC 1: ", adcVal);
-    adcVal=analogRead(A2);
-    dbgVariable("ADC 2: ", adcVal);
-    adcVal=analogRead(A3);
-    dbgVariable("ADC 3: ", adcVal); */
-    readAdc(&adcVal, Int_0V_channel);
-    //dbgVariable("ADC0V:", adcVal);
-    readAdc(&adcVal, Int_1V1_channel);
-    //dbgVariable("ADCV1V1: ", adcVal);
-    //dbgVariable("ADCV1V1_diff:", ((int32_t) adcVal - 8800));
-    counter++;
-    delay(1000);
+    handleInterfaces[0]->update();
+    handleInterfaces[1]->update();
+    mainmenu_display();
+    delay(50);
   }
     
 }

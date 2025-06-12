@@ -84,7 +84,7 @@ void calibrateAdc() {
     dbgVariable("ADC value for 1.1V after calibration: ", temp);  
 }
 
-void readAdc(uint16_t* adcValue, Adc_Channel_t channel)
+void readAdc(uint16_t* adcValue, uint8_t channel)
 {
     (*adcValue) = 0;
     int32_t temp = 0;
@@ -131,4 +131,6 @@ void readAdc(uint16_t* adcValue, Adc_Channel_t channel)
 
     // stop ADC
     cbi(ADCSRA, ADEN);
+    dbgVariable("readAdc:channel:", (int) channel);
+    dbgVariable("readAdc:value:", (int) adcValue);
 }

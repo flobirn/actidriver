@@ -5,6 +5,4 @@ void mainmenu_display();
 
 void mainmenu_init();
 
-
-
 #endif

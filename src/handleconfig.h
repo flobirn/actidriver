@@ -4,6 +4,7 @@
 #include "Arduino.h"
 
 #define HANDLE_NAME_LENGTH 3
+
 /** maximum number of elements in the adc -> temperature mapping */
 #define VT_SIZE 5
 
@@ -38,35 +39,47 @@ typedef enum {
     FH_INSTAND  = -1,
 } FindHandle_t;
 
+// cppcheck-suppress-begin[unusedStructMember] false positive
 typedef struct {
     uint16_t adcValue;
     uint8_t  temperature; //multiples of 5 degrees
 } VT_Mapping_t;
+// cppcheck-suppress-end[unusedStructMember]
 
+// cppcheck-suppress-begin[unusedStructMember] false positive
 typedef struct {
     double Kp;
     double Ki;
     double Kd;
 } PIDParams_t;
+// cppcheck-suppress-end[unusedStructMember]
 
 typedef struct {
     uint8_t      maxPower; //in Watts
     double       resistance; // in Ohms
     VT_Mapping_t vtMapping[VT_SIZE];
-    uint8_t      maxTemperature;  //* 5 degrees C
-    uint8_t      idleTemperature; //* 5 degrees C
+    uint8_t      maxTemperature;  // * 5 degrees C
+    uint8_t      idleTemperature; // * 5 degrees C
+    uint8_t      startTemperature; // * 5 degrees C
     PIDParams_t  slowPidParam;
     PIDParams_t  fastPidParam;
 } Heater_t;
 
 typedef struct {
     HandleType_t type;
+    // cppcheck-suppress[unusedStructMember] false positive
     uint8_t      name[HANDLE_NAME_LENGTH];
+    // cppcheck-suppress[unusedStructMember] false positive
     uint16_t     id;
+    // cppcheck-suppress[unusedStructMember] false positive
     VT_Mapping_t vtMapping[VT_SIZE];
-    uint8_t      inStandTimeout;
+    // cppcheck-suppress[unusedStructMember] false positive
+    uint8_t      inStandTimeout; //seconds
+    // cppcheck-suppress[unusedStructMember] false positive
     uint8_t      standbyTimeout;
+    // cppcheck-suppress[unusedStructMember] false positive
     uint8_t      sleepTimeout;
+    uint8_t      maxTemperature;  // * 5 degrees C
     Heater_t     heater;
 } HandleConfig_t;
 

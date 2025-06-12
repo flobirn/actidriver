@@ -1,5 +1,8 @@
 #include "globaldata.h"
 #include "fsm.h"
+#include "handleInterface.hpp"
+
+extern HandleInterface* handleInterfaces[];
 
 State *activeState; 
 
@@ -44,9 +47,9 @@ State* SelectSetPointState::onLeft() {
 State* SelectSetPointState::onClick() {
     if (!flags.selected) {
         flags.selected = true;
-        globals.handleActuals[handle].fsmTargetTemperature = globals.handlePersistent[handle].targetTemperature;
+        globals.handleActuals[handle].fsmTargetTemperature = handleInterfaces[handle]->targetTemperature;
     } else {
-        globals.handlePersistent[handle].targetTemperature = globals.handleActuals[handle].fsmTargetTemperature;
+        handleInterfaces[handle]->targetTemperature = globals.handleActuals[handle].fsmTargetTemperature;
         flags.selected = false;
     }
     Serial.print("selected:"); Serial.println(flags.selected);
@@ -60,7 +63,7 @@ State* SetPointState::onRight() {
         return this;
     }
     if (setPoint < NUMBER_OF_SETPOINTS - 1) {
-        setPoint++;
+        ++setPoint;
         return this;
     }
     return this;
@@ -82,7 +85,7 @@ State* SetPointState::onClick() {
         flags.selected = true;
         return this;
     } 
-    globals.handlePersistent[handle].targetTemperature = globals.setpoints[setPoint];
+    handleInterfaces[handle]->targetTemperature = globals.setpoints[setPoint];
     flags.selected = 0;
     return this;
 }

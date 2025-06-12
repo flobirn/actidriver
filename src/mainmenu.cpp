@@ -2,15 +2,15 @@
 #include "display.h"
 #include "solarized.h"
 #include "fsm.h"
+#include "handleInterface.hpp"
 //#include "logisoso09_64pt7b.h"
+
+extern HandleInterface* handleInterfaces[];
 
 typedef struct {
     uint16_t tipTemperature;
     uint8_t  handleTemperature;
     uint16_t targetTemperature;
-
-    HandleType_t handleType;
-
 } HandleDisplayedValues_t;
 
 typedef struct {
@@ -73,7 +73,7 @@ DisplayedData_t shownValues = {
 static inline void displayTipTemperature() {
     for (int handle = 0; handle < MAX_HANDLES; handle++) {
         //do we have to display error state?
-        if (globals.handleActuals[handle].flagsRegister.heaterTempSensorError) {
+        if (handleInterfaces[handle]->flags.heaterOvertemp) {
             if ((shownValues.handle[handle].tipTemperature & TIP_TEMPERATURE_ERROR_MASK) != TIP_TEMPERATURE_ERROR_MASK) {
                 display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_BG_COLOR);
                 display.drawBox(handle * SCREEN_COL_WIDTH, 0, (handle+1) * SCREEN_COL_WIDTH, TIP_TEMPERATURE_CHAR_HEIGHT);
@@ -87,9 +87,9 @@ static inline void displayTipTemperature() {
                 display.print("Tip Temp.");
                 shownValues.handle[handle].tipTemperature = TIP_TEMPERATURE_ERROR_MASK;
             }
-        } else if (globals.handleActuals[handle].flagsRegister.heaterStandby) {
+        } else if (handleInterfaces[handle]->inStandby()) {
             // stand by mode, display temperature and "standby"
-            if ((shownValues.handle[handle].tipTemperature) != (globals.handleActuals[handle].tipTemperature | TIP_TEMPERATURE_STANDBY_MASK)) {        
+            if ((shownValues.handle[handle].tipTemperature) != (handleInterfaces[handle]->heaterTemperature | TIP_TEMPERATURE_STANDBY_MASK)) {        
                 display.setFont(TIP_TEMPERATURE_STANDBY_FONT);
                 // display standby and tip temperature
                 if (shownValues.handle[handle].tipTemperature < TIP_TEMPERATURE_STANDBY_MASK) {
@@ -101,18 +101,18 @@ static inline void displayTipTemperature() {
                     display.print("STANDBY");
                 }
 
-                if ((shownValues.handle[handle].tipTemperature & ~TIP_TEMPERATURE_STANDBY_MASK) != globals.handleActuals[handle].tipTemperature) {
+                if ((shownValues.handle[handle].tipTemperature & ~TIP_TEMPERATURE_STANDBY_MASK) != handleInterfaces[handle]->heaterTemperature) {
                     display.setPrintPos(TIP_TEMPERATURE_STANDBY_X + handle * SCREEN_COL_WIDTH, TIP_TEMPERATURE_STANDBY_Y+TIP_TEMPERATURE_STANDBY_HEIGHT);
-                    display.print(globals.handleActuals[handle].tipTemperature);
+                    display.print(handleInterfaces[handle]->heaterTemperature);
                 }
 
-                shownValues.handle[handle].tipTemperature = globals.handleActuals[handle].tipTemperature | TIP_TEMPERATURE_STANDBY_MASK;
+                shownValues.handle[handle].tipTemperature = handleInterfaces[handle]->heaterTemperature | TIP_TEMPERATURE_STANDBY_MASK;
             }
         } else {
             //normal display
             display.setFont(TIP_TEMPERATURE_FONT);
             display.setPrintPos(TIP_TEMPERATURE_X + handle * TIP_TEMPERATURE_X2, TIP_TEMPERATURE_Y);
-            uint8_t tempNew = globals.handleActuals[handle].tipTemperature / 100; //hundreds number
+            uint8_t tempNew = handleInterfaces[handle]->heaterTemperature / 100; //hundreds number
             uint8_t tempOld = shownValues.handle[handle].tipTemperature / 100; //hundreds number
         
             display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
@@ -126,7 +126,7 @@ static inline void displayTipTemperature() {
                 display.print(tempNew);
             }
             // tens
-            tempNew = (globals.handleActuals[handle].tipTemperature % 100) / 10;
+            tempNew = (handleInterfaces[handle]->heaterTemperature % 100) / 10;
             tempOld = (shownValues.handle[handle].tipTemperature % 100) / 10;
             if (tempNew != tempOld) {
                 display.setPrintPos(TIP_TEMPERATURE_X + (handle * TIP_TEMPERATURE_X2) + TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
@@ -137,7 +137,7 @@ static inline void displayTipTemperature() {
                 display.print(tempNew);
             }
             //units
-            tempNew = globals.handleActuals[handle].tipTemperature % 10;
+            tempNew = handleInterfaces[handle]->heaterTemperature % 10;
             tempOld = shownValues.handle[handle].tipTemperature % 10;
             if (tempNew != tempOld) {
                 display.setPrintPos(TIP_TEMPERATURE_X + handle * TIP_TEMPERATURE_X2 + 2 * TIP_TEMPERATURE_CHAR_WIDTH, TIP_TEMPERATURE_Y);
@@ -147,7 +147,7 @@ static inline void displayTipTemperature() {
                 //display.setColor(FG_COLOR_IDX, TIP_TEMPERATURE_FG_COLOR);
                 display.print(tempNew);
             }
-            shownValues.handle[handle].tipTemperature = globals.handleActuals[handle].tipTemperature;
+            shownValues.handle[handle].tipTemperature = handleInterfaces[handle]->heaterTemperature;
         }
     }
 }
@@ -172,7 +172,7 @@ static inline void displayTargetTemperature() {
     extern SelectSetPointState selectSetPoint;
     extern SetPointState setPoint;
     for (int handle = 0; handle < MAX_HANDLES; handle++) {
-        uint16_t whatToShow = globals.handlePersistent[handle].targetTemperature;
+        uint16_t whatToShow = handleInterfaces[handle]->targetTemperature;
         display.setFont(TARGET_TEMPERATURE_FONT);
         display.setPrintPos(TARGET_TEMPERATURE_X + handle * SCREEN_COL_WIDTH, TARGET_TEMPERATURE_Y);
         if (((selectSetPoint.handle == handle) && (selectSetPoint.flags.selected)) ||
@@ -209,29 +209,24 @@ static inline void displayHandleType() {
     
     for (int handle = 0; handle < MAX_HANDLES; handle++) {
         display.setPrintPos(HANDLE_TYPE_X + handle * SCREEN_COL_WIDTH, HANDLE_TYPE_Y);
-        if (globals.handleActuals[handle].handleType != shownValues.handle[handle].handleType) {
-            switch (globals.handleActuals[handle].handleType) {
-                case HT_FMRP:
-                    display.setColor(FG_COLOR_IDX, HANDLE_TYPE_FG_COLOR);
-                    display.setColor(BG_COLOR_IDX, HANDLE_TYPE_BG_COLOR);
-                    display.print("FMRP: ");
-                    display.print(globals.handleActuals[handle].handleTemperature);
-                    display.print("`C ");
-                    break;
-                default:
-                    display.setColor(FG_COLOR_IDX, ERROR_FG_COLOR);
-                    display.setColor(BG_COLOR_IDX, ERROR_BG_COLOR);
-                    display.print("NO HANDLE!");
-                    break;
-            }
-            shownValues.handle[handle].handleType = globals.handleActuals[handle].handleType;
+        if (handleInterfaces[handle]->state == HS_NO_HANDLE) {
+            display.setColor(FG_COLOR_IDX, ERROR_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, ERROR_BG_COLOR);
+            display.print("NO HANDLE!");
+        } else {
+            display.setColor(FG_COLOR_IDX, HANDLE_TYPE_FG_COLOR);
+            display.setColor(BG_COLOR_IDX, HANDLE_TYPE_BG_COLOR);
+            for (int i = 0; i < HANDLE_NAME_LENGTH; i++)
+                display.write(handleInterfaces[handle]->config.name[i]);
+            display.print(": ");
+            display.print(handleInterfaces[handle]->handleTemperature);
+            display.print("`C ");
         }
     }
 }
 
 
 #define  MENU_LINE_X 0
-#define  MENU_LINE_Y 154
 #define  MENU_LINE_BG_COLOR SOLARIZED_24b_base3
 #define  MENU_LINE_FG_COLOR SOLARIZED_24b_blue
 //#define  MENU_LINE_FONT ucg_font_helvB08_hr
