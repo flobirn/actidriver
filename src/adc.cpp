@@ -67,21 +67,21 @@ void calibrateAdc() {
 
     readAdc(&temp, Int_0V_channel);
     adc_offset = temp;
-    dbgVariable("ADC offset error: ", adc_offset)
+    dbgVariable("ADC error (0V): ", adc_offset)
 
     readAdc(&temp, Int_1V1_channel);
-    dbgVariable("ADC value for 1.1V: ", temp);
+    dbgVariable("ADC(1.1V): ", temp);
     if (temp != 0) {
         adc_1V1_error = (temp - ADC_1V1_VALUE) / temp;
         //dbgVariable("ADC value for 1.1V: ", temp);
     }
-    dbgVariable("ADC error at 1.1V: ", adc_1V1_error);
+    dbgVariable("ADC err(1.1V): ", adc_1V1_error);
 
     readAdc(&temp, Int_0V_channel);
-    dbgVariable("ADC value for 0V after calibration: ", temp);
+    dbgVariable("ADC(0V) after cal:", temp);
 
     readAdc(&temp, Int_1V1_channel);
-    dbgVariable("ADC value for 1.1V after calibration: ", temp);  
+    dbgVariable("ADC (1.1V) after cal:", temp);  
 }
 
 void readAdc(uint16_t* adcValue, uint8_t channel)
@@ -131,6 +131,6 @@ void readAdc(uint16_t* adcValue, uint8_t channel)
 
     // stop ADC
     cbi(ADCSRA, ADEN);
-    dbgVariable("readAdc:channel:", (int) channel);
-    dbgVariable("readAdc:value:", (int) adcValue);
+    dbgVariable("readAdc:ch:", (int) channel);
+    dbgVariable("readAdc:", (int) adcValue);
 }

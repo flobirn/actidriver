@@ -3,7 +3,6 @@
 #include "solarized.h"
 #include "fsm.h"
 #include "handleInterface.hpp"
-//#include "logisoso09_64pt7b.h"
 
 extern HandleInterface* handleInterfaces[];
 
@@ -34,8 +33,6 @@ DisplayedData_t shownValues = {
 #define  ERROR_FG_COLOR SOLARIZED_24b_red
 
 #define  TIP_TEMPERATURE_LENGTH 3
-//#define  TIP_TEMPERATURE_FONT ucg_font_inb53_mn
-//#define  TIP_TEMPERATURE_FONT ucg_font_logisoso38_tn
 #define  TIP_TEMPERATURE_FONT ucg_font_inb33_mn
 #define  TIP_TEMPERATURE_X 0
 #define  TIP_TEMPERATURE_CHAR_WIDTH 25
@@ -229,7 +226,6 @@ static inline void displayHandleType() {
 #define  MENU_LINE_X 0
 #define  MENU_LINE_BG_COLOR SOLARIZED_24b_base3
 #define  MENU_LINE_FG_COLOR SOLARIZED_24b_blue
-//#define  MENU_LINE_FONT ucg_font_helvB08_hr
 #define  MENU_LINE_FONT ucg_font_helvB12_hf
 #define  MENU_LINE_CHAR_WIDTH 15
 #define  MENU_LINE_CHAR_HEIGHT 20
@@ -253,7 +249,6 @@ static inline void displayMenuBar() {
 #define  HIGHLIGHTED_SETPOINT_BG_COLOR SOLARIZED_24b_base02
 #define  HIGHLIGHTED_SETPOINT_FG_COLOR SOLARIZED_24b_yellow
 
-//#define  MENU_LINE_FONT ucg_font_helvB08_hr
 #define  SETPOINT_FONT ucg_font_helvB12_hf
 #define  SETPOINT_CHAR_WIDTH 15
 #define  SETPOINT_CHAR_HEIGHT 20
@@ -292,6 +287,7 @@ void mainmenu_display() {
     displayHandleType();
     //displayMenuBar();
     displaySetpoints();
+    /** todo: display pwm duty as the length of a line between tip and target temperatures */
     
 
 }
